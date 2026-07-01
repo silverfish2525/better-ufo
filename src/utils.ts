@@ -381,10 +381,14 @@ export function withLeadingSlash(input = ""): string {
  * @group utils
  */
 export function cleanDoubleSlashes(input = ""): string {
-  return input
+  const qIdx = input.search(/[?#]/);
+  const path = qIdx === -1 ? input : input.slice(0, qIdx);
+  const rest = qIdx === -1 ? "" : input.slice(qIdx);
+  const cleaned = path
     .split("://")
     .map((string_) => string_.replace(/\/{2,}/g, "/"))
     .join("://");
+  return cleaned + rest;
 }
 
 /**

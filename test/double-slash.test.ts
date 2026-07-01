@@ -20,3 +20,18 @@ describe("cleanDoubleSlashes", () => {
     expect(cleanDoubleSlashes()).toBe("");
   });
 });
+
+describe("cleanDoubleSlashes preserves query and fragment", () => {
+  const tests: Record<string, string> = {
+    "/a//b?x//y": "/a/b?x//y",
+    "/a//b#x//y": "/a/b#x//y",
+    "/a//b?x//y#z//w": "/a/b?x//y#z//w",
+    "/a//b?x=1//2&y=3": "/a/b?x=1//2&y=3",
+    "http://foo.com//path//x?q//v#h//h": "http://foo.com/path/x?q//v#h//h",
+  };
+  for (const input in tests) {
+    test(input, () => {
+      expect(cleanDoubleSlashes(input)).toBe(tests[input]);
+    });
+  }
+});

@@ -24,6 +24,7 @@
     "build": "unbuild",
     "build:docs": "automd",
     "automd": "automd",
+    "check:no-deps": "node scripts/check-no-runtime-deps.mjs",
     "dev": "vitest",
     "lint": "eslint . && prettier -c src test",
     "lint:fix": "eslint --fix . && prettier -w src test",
@@ -31,7 +32,7 @@
     "release": "pnpm test && changelogen --release && npm publish && git push --follow-tags",
     "typecheck": "tsc --noEmit",
     "test:typecheck": "vitest run --typecheck",
-    "test": "pnpm lint && vitest run --typecheck"
+    "test": "pnpm check:no-deps && pnpm lint && vitest run --typecheck"
   },
   "devDependencies": {
     "@types/node": "^25.6.0",

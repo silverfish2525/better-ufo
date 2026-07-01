@@ -505,15 +505,31 @@ describe("parseAuth", () => {
     });
   });
 
-  // FIXME(CORR-03): plan 007 changes this to
-  //   { username: "user", password: "pa:ss" }
-  // Today parseAuth splits on the FIRST ":" and drops the rest ("ss").
-  // See src/parse.ts. When plan 007 lands, update this expected value
-  // and remove this FIXME.
-  it("currently drops content after the second colon (buggy — see FIXME)", () => {
+  it("preserves colons in the password (RFC 3986 §3.2.1 — first colon splits)", () => {
     expect(parseAuth("user:pa:ss")).toStrictEqual({
       username: "user",
-      password: "pa",
+      password: "pa:ss",
+    });
+  });
+
+  it("handles a leading colon (empty username, non-empty password)", () => {
+    expect(parseAuth(":pw")).toStrictEqual({
+      username: "",
+      password: "pw",
+    });
+  });
+
+  it("handles a trailing colon (username, empty password)", () => {
+    expect(parseAuth("user:")).toStrictEqual({
+      username: "user",
+      password: "",
+    });
+  });
+
+  it("handles multiple consecutive colons in the password", () => {
+    expect(parseAuth("u::::p")).toStrictEqual({
+      username: "u",
+      password: ":::p",
     });
   });
 });

@@ -375,6 +375,10 @@ Joins multiple URL segments into a single URL.
 
 ```js
 joinURL("a", "/b", "/c"); // "a/b/c"
+// Leading "//" in the result is normalized (SEC-02 open-redirect hardening):
+joinURL("", "//attacker.com"); // "/attacker.com"
+// Opt-out is available for callers who genuinely want a protocol-relative URL:
+joinURL("", "//host", { allowProtocolRelative: true }); // "//host"
 ```
 
 ### `normalizeURL(input)`
@@ -404,7 +408,7 @@ resolveURL("http://foo.com/foo?test=123#token", "bar", "baz");
 // Returns "http://foo.com/foo/bar/baz?test=123#token"
 ```
 
-### `withBase(input, base)`
+### `withBase(input, base, opts?)`
 
 Ensures the URL or pathname starts with base.
 
@@ -416,6 +420,11 @@ If input already starts with base, it will not be added again.
 withBase("/foo/bar", "/foo"); // "/foo/bar"
 
 withBase("/foo/bar", "/baz"); // "/baz/foo/bar"
+
+// Leading "//" is normalized (SEC-02 open-redirect hardening):
+withBase("//attacker.com/x", "/"); // "/attacker.com/x"
+// Opt-out is available for callers who genuinely want a protocol-relative URL:
+withBase("//host/x", "/", { allowProtocolRelative: true }); // "//host/x"
 ```
 
 ### `withFragment(input, hash)`

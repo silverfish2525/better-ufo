@@ -62,3 +62,28 @@ describe("joinRelativeURL", () => {
     });
   }
 });
+
+// SEC-02 — leading '//' after join must not become a protocol-relative URL.
+// Test strings model the attack pattern; no rendering side-effect is invoked.
+describe("joinURL — SEC-02 leading '//' normalization", () => {
+  test("empty base + '//' segment: collapses leading '//' to '/'", () => {
+    expect(joinURL("", "//attacker.com/x")).toBe("/attacker.com/x");
+  });
+  test("'/' base + '//' segment: collapses leading '//' to '/'", () => {
+    expect(joinURL("/", "//attacker.com/x")).toBe("/attacker.com/x");
+  });
+  test("protocol-carrying base is unaffected (no regression)", () => {
+    expect(joinURL("https://a.com", "b")).toBe("https://a.com/b");
+  });
+  test("protocol-relative base is preserved (caller's explicit intent)", () => {
+    // Already asserted above in the data-driven suite; re-pinned here for SEC-02 clarity.
+    expect(joinURL("//google.com/", "./foo", "/bar")).toBe(
+      "//google.com/foo/bar",
+    );
+  });
+  test("escape hatch: { allowProtocolRelative: true } preserves '//'", () => {
+    expect(
+      joinURL("", "//attacker.com/x", { allowProtocolRelative: true }),
+    ).toBe("//attacker.com/x");
+  });
+});

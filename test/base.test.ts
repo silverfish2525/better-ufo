@@ -105,3 +105,25 @@ describe("withoutBase — fragment characterization", () => {
     expect(withoutBase("/foo#h", "/foo")).toBe("/foo#h");
   });
 });
+
+// SEC-02 — withBase must not passthrough a protocol-relative input when base is empty/'/'.
+// Test strings model the attack pattern; no rendering side-effect is invoked.
+describe("withBase — SEC-02 leading '//' normalization", () => {
+  test("empty base + '//' input: collapses leading '//' to '/'", () => {
+    expect(withBase("//attacker.com/x", "")).toBe("/attacker.com/x");
+  });
+  test("'/' base + '//' input: collapses leading '//' to '/'", () => {
+    expect(withBase("//attacker.com/x", "/")).toBe("/attacker.com/x");
+  });
+  test("proper base + '//' input still joins safely", () => {
+    expect(withBase("//attacker.com/x", "/app")).toBe("/app/attacker.com/x");
+  });
+  test("protocol-carrying input is unaffected (no regression)", () => {
+    expect(withBase("https://a.com", "/foo")).toBe("https://a.com");
+  });
+  test("escape hatch: { allowProtocolRelative: true } preserves '//'", () => {
+    expect(
+      withBase("//attacker.com/x", "/", { allowProtocolRelative: true }),
+    ).toBe("//attacker.com/x");
+  });
+});

@@ -73,6 +73,24 @@ describe("$URL", () => {
       });
     }
   });
+
+  test("preserves multi-colon userinfo password and percent-encodes on serialization", () => {
+    const u = new $URL("http://user:pa:ss@example.com/path");
+    expect(u.auth).toBe("user:pa:ss");
+    expect(u.username).toBe("user");
+    expect(u.password).toBe("pa:ss");
+    expect(u.encodedAuth).toBe("user:pa%3Ass");
+    // Serialization percent-encodes the colon in the password — this is expected and
+    // matches WHATWG (`new URL("http://user:pa:ss@example.com").href` === same).
+    expect(u.href).toBe("http://user:pa%3Ass@example.com/path");
+  });
+
+  test("regression: single-colon userinfo unchanged", () => {
+    const u = new $URL("http://user:pass@example.com/path");
+    expect(u.username).toBe("user");
+    expect(u.password).toBe("pass");
+    expect(u.href).toBe("http://user:pass@example.com/path");
+  });
 });
 
 describe("$URL — IPv6", () => {

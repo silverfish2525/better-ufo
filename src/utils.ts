@@ -68,6 +68,10 @@ function isAtBaseBoundary(input: string, baseLen: number): boolean {
   return URL_BOUNDARY_CHARS.has(input[baseLen]!);
 }
 
+export function isRelative<const S extends string>(
+  inputString: S,
+): IsRelative<S>;
+export function isRelative(inputString: string): boolean;
 /**
  * Check if a path starts with `./` or `../`.
  *
@@ -78,10 +82,6 @@ function isAtBaseBoundary(input: string, baseLen: number): boolean {
  *
  * @group utils
  */
-export function isRelative<const S extends string>(
-  inputString: S,
-): IsRelative<S>;
-export function isRelative(inputString: string): boolean;
 export function isRelative(inputString: string) {
   return ["./", "../"].some((string_) => inputString.startsWith(string_));
 }
@@ -190,6 +190,13 @@ export function isScriptProtocol(protocol?: string): boolean {
   return SCRIPT_SCHEMES.has(normalized);
 }
 
+export function hasTrailingSlash<const S extends string>(
+  input: S,
+): HasTrailingSlash<S>;
+export function hasTrailingSlash(
+  input?: string,
+  respectQueryAndFragment?: boolean,
+): boolean;
 /**
  * Checks if the input has a trailing slash.
  *
@@ -207,13 +214,6 @@ export function isScriptProtocol(protocol?: string): boolean {
  *
  * @group utils
  */
-export function hasTrailingSlash<const S extends string>(
-  input: S,
-): HasTrailingSlash<S>;
-export function hasTrailingSlash(
-  input?: string,
-  respectQueryAndFragment?: boolean,
-): boolean;
 export function hasTrailingSlash(
   input = "",
   respectQueryAndFragment?: boolean,
@@ -224,6 +224,13 @@ export function hasTrailingSlash(
   return TRAILING_SLASH_RE.test(input);
 }
 
+export function withoutTrailingSlash<const S extends string>(
+  input: S,
+): Refine<S, WithoutTrailingSlash<S>>;
+export function withoutTrailingSlash(
+  input?: string,
+  respectQueryAndFragment?: boolean,
+): string;
 /**
  * Removes the trailing slash from the URL or pathname.
  *
@@ -239,13 +246,6 @@ export function hasTrailingSlash(
  *
  * @group utils
  */
-export function withoutTrailingSlash<const S extends string>(
-  input: S,
-): Refine<S, WithoutTrailingSlash<S>>;
-export function withoutTrailingSlash(
-  input?: string,
-  respectQueryAndFragment?: boolean,
-): string;
 export function withoutTrailingSlash(
   input = "",
   respectQueryAndFragment?: boolean,
@@ -270,6 +270,13 @@ export function withoutTrailingSlash(
   );
 }
 
+export function withTrailingSlash<const S extends string>(
+  input: S,
+): Refine<S, WithTrailingSlash<S>>;
+export function withTrailingSlash(
+  input?: string,
+  respectQueryAndFragment?: boolean,
+): string;
 /**
  * Ensures the URL ends with a trailing slash.
  *
@@ -285,13 +292,6 @@ export function withoutTrailingSlash(
  *
  * @group utils
  */
-export function withTrailingSlash<const S extends string>(
-  input: S,
-): Refine<S, WithTrailingSlash<S>>;
-export function withTrailingSlash(
-  input?: string,
-  respectQueryAndFragment?: boolean,
-): string;
 export function withTrailingSlash(
   input = "",
   respectQueryAndFragment?: boolean,
@@ -316,19 +316,23 @@ export function withTrailingSlash(
   return s0 + "/" + (s.length > 0 ? `?${s.join("?")}` : "") + fragment;
 }
 
+export function hasLeadingSlash<const S extends string>(
+  input: S,
+): HasLeadingSlash<S>;
+export function hasLeadingSlash(input?: string): boolean;
 /**
  * Checks if the input has a leading slash (e.g. `/foo`).
  *
  * @group utils
  */
-export function hasLeadingSlash<const S extends string>(
-  input: S,
-): HasLeadingSlash<S>;
-export function hasLeadingSlash(input?: string): boolean;
 export function hasLeadingSlash(input = ""): boolean {
   return input.startsWith("/");
 }
 
+export function withoutLeadingSlash<const S extends string>(
+  input: S,
+): Refine<S, WithoutLeadingSlash<S>>;
+export function withoutLeadingSlash(input?: string): string;
 /**
  * Removes leading slash from the URL or pathname.
  *
@@ -340,14 +344,14 @@ export function hasLeadingSlash(input = ""): boolean {
  *
  * @group utils
  */
-export function withoutLeadingSlash<const S extends string>(
-  input: S,
-): Refine<S, WithoutLeadingSlash<S>>;
-export function withoutLeadingSlash(input?: string): string;
 export function withoutLeadingSlash(input = ""): string {
   return (hasLeadingSlash(input) ? input.slice(1) : input) || "/";
 }
 
+export function withLeadingSlash<const S extends string>(
+  input: S,
+): Refine<S, WithLeadingSlash<S>>;
+export function withLeadingSlash(input?: string): string;
 /**
  * Ensures the URL or pathname has a leading slash.
  *
@@ -359,10 +363,6 @@ export function withoutLeadingSlash(input = ""): string {
  *
  * @group utils
  */
-export function withLeadingSlash<const S extends string>(
-  input: S,
-): Refine<S, WithLeadingSlash<S>>;
-export function withLeadingSlash(input?: string): string;
 export function withLeadingSlash(input = ""): string {
   return hasLeadingSlash(input) ? input : "/" + input;
 }
@@ -485,6 +485,11 @@ export function withoutBase(input: string, base: string) {
   return "/" + trimmed;
 }
 
+export function withQuery<
+  const Input extends string,
+  const Q extends QueryObject,
+>(input: Input, query: Q): WithQueryResult<Input, Q>;
+export function withQuery(input: string, query: QueryObject): string;
 /**
  * Add/Replace the query section of the URL.
  *
@@ -496,11 +501,6 @@ export function withoutBase(input: string, base: string) {
  *
  * @group utils
  */
-export function withQuery<
-  const Input extends string,
-  const Q extends QueryObject,
->(input: Input, query: Q): WithQueryResult<Input, Q>;
-export function withQuery(input: string, query: QueryObject): string;
 export function withQuery(input: string, query: QueryObject): string {
   const parsed = parseURL(input);
   const mergedQuery = { ...parseQuery(parsed.search), ...query };
@@ -576,6 +576,14 @@ export function joinURL(
   base: string,
   ...input: [...string[], JoinURLOptions]
 ): string;
+export function joinURL<
+  const Base extends string,
+  const Rest extends readonly string[],
+>(base: Base, ...input: Rest): JoinURLResult<Base, Rest>;
+export function joinURL(
+  base: string,
+  ...input: Array<string | JoinURLOptions>
+): string;
 /**
  * Joins multiple URL segments into a single URL.
  *
@@ -591,14 +599,6 @@ export function joinURL(
  *
  * @group utils
  */
-export function joinURL<
-  const Base extends string,
-  const Rest extends readonly string[],
->(base: Base, ...input: Rest): JoinURLResult<Base, Rest>;
-export function joinURL(
-  base: string,
-  ...input: Array<string | JoinURLOptions>
-): string;
 export function joinURL(
   base: string,
   ...input: Array<string | JoinURLOptions>
@@ -694,6 +694,10 @@ export function joinRelativeURL(..._input: string[]): string {
   return url;
 }
 
+export function withHttp<const S extends string>(
+  input: S,
+): Refine<S, WithProtocol<S, "http://">>;
+export function withHttp(input: string): string;
 /**
  * Adds or replaces the URL protocol to `http://`.
  *
@@ -705,14 +709,14 @@ export function joinRelativeURL(..._input: string[]): string {
  *
  * @group utils
  */
-export function withHttp<const S extends string>(
-  input: S,
-): Refine<S, WithProtocol<S, "http://">>;
-export function withHttp(input: string): string;
 export function withHttp(input: string): string {
   return withProtocol(input, "http://");
 }
 
+export function withHttps<const S extends string>(
+  input: S,
+): Refine<S, WithProtocol<S, "https://">>;
+export function withHttps(input: string): string;
 /**
  * Adds or replaces the URL protocol to `https://`.
  *
@@ -724,14 +728,14 @@ export function withHttp(input: string): string {
  *
  * @group utils
  */
-export function withHttps<const S extends string>(
-  input: S,
-): Refine<S, WithProtocol<S, "https://">>;
-export function withHttps(input: string): string;
 export function withHttps(input: string): string {
   return withProtocol(input, "https://");
 }
 
+export function withoutProtocol<const S extends string>(
+  input: S,
+): Refine<S, WithProtocol<S, "">>;
+export function withoutProtocol(input: string): string;
 /**
  * Removes the protocol from the input.
  *
@@ -739,15 +743,18 @@ export function withHttps(input: string): string {
  * ```js
  * withoutProtocol("http://example.com"); // "example.com"
  * ```
+ *
+ * @group utils
  */
-export function withoutProtocol<const S extends string>(
-  input: S,
-): Refine<S, WithProtocol<S, "">>;
-export function withoutProtocol(input: string): string;
 export function withoutProtocol(input: string): string {
   return withProtocol(input, "");
 }
 
+export function withProtocol<const S extends string, const P extends string>(
+  input: S,
+  protocol: P,
+): Refine<S, WithProtocol<S, P>>;
+export function withProtocol(input: string, protocol: string): string;
 /**
  * Adds or replaces protocol of the input URL.
  *
@@ -758,11 +765,6 @@ export function withoutProtocol(input: string): string {
  *
  * @group utils
  */
-export function withProtocol<const S extends string, const P extends string>(
-  input: S,
-  protocol: P,
-): Refine<S, WithProtocol<S, P>>;
-export function withProtocol(input: string, protocol: string): string;
 export function withProtocol(input: string, protocol: string): string {
   let match = input.match(PROTOCOL_REGEX);
   if (!match) {
@@ -919,6 +921,11 @@ export function isEqual(a: string, b: string, options: CompareURLOptions = {}) {
   return a === b;
 }
 
+export function withFragment<
+  const Input extends string,
+  const Hash extends string,
+>(input: Input, hash: Hash): Refine<Input, WithFragment<Input, Hash>>;
+export function withFragment(input: string, hash: string): string;
 /**
  * Adds or replaces the fragment section of the URL.
  *
@@ -932,11 +939,6 @@ export function isEqual(a: string, b: string, options: CompareURLOptions = {}) {
  *
  * @group utils
  */
-export function withFragment<
-  const Input extends string,
-  const Hash extends string,
->(input: Input, hash: Hash): Refine<Input, WithFragment<Input, Hash>>;
-export function withFragment(input: string, hash: string): string;
 export function withFragment(input: string, hash: string): string {
   if (!hash || hash === "#") {
     return input;
@@ -959,6 +961,10 @@ export function withFragment(input: string, hash: string): string {
   return stringifyParsedURL(parsed);
 }
 
+export function withoutFragment<const S extends string>(
+  input: S,
+): Refine<S, WithoutFragment<S>>;
+export function withoutFragment(input: string): string;
 /**
  * Removes the fragment section from the URL.
  *
@@ -971,10 +977,6 @@ export function withFragment(input: string, hash: string): string {
  *
  * @group utils
  */
-export function withoutFragment<const S extends string>(
-  input: S,
-): Refine<S, WithoutFragment<S>>;
-export function withoutFragment(input: string): string;
 export function withoutFragment(input: string): string {
   // Fast-path: no fragment present -> `parseURL` + `stringifyParsedURL`
   // would only apply protocol/host normalization. Skip only when the input
@@ -990,6 +992,10 @@ export function withoutFragment(input: string): string {
   return stringifyParsedURL({ ...parseURL(input), hash: "" });
 }
 
+export function withoutHost<const S extends string>(
+  input: S,
+): Refine<S, WithoutHost<S>>;
+export function withoutHost(input: string): string;
 /**
  * Removes the host from the URL while preserving everything else.
  *
@@ -1001,10 +1007,6 @@ export function withoutFragment(input: string): string {
  *
  * @group utils
  */
-export function withoutHost<const S extends string>(
-  input: S,
-): Refine<S, WithoutHost<S>>;
-export function withoutHost(input: string): string;
 export function withoutHost(input: string) {
   // Fast-path: input already has no host to strip. `hasProtocol(input,
   // { acceptRelative: true })` returning false means no scheme AND no

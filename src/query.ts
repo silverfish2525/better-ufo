@@ -75,6 +75,14 @@ export function parseQuery<T extends ParsedQuery = ParsedQuery>(
   return object as T;
 }
 
+export function encodeQueryItem<
+  const K extends string,
+  const V extends QueryValue | QueryValue[],
+>(key: K, value: V): StringifyQueryItem<K, V>;
+export function encodeQueryItem(
+  key: string,
+  value: QueryValue | QueryValue[],
+): string;
 /**
  * Encodes a pair of key and value into a url query string value.
  *
@@ -92,14 +100,6 @@ export function parseQuery<T extends ParsedQuery = ParsedQuery>(
  *
  * @group Query_utils
  */
-export function encodeQueryItem<
-  const K extends string,
-  const V extends QueryValue | QueryValue[],
->(key: K, value: V): StringifyQueryItem<K, V>;
-export function encodeQueryItem(
-  key: string,
-  value: QueryValue | QueryValue[],
-): string;
 export function encodeQueryItem(
   key: string,
   value: QueryValue | QueryValue[],
@@ -123,6 +123,10 @@ export function encodeQueryItem(
   return `${encodeQueryKey(key)}=${encodeQueryValue(value)}`;
 }
 
+export function stringifyQuery<const T extends QueryObject>(
+  query: T,
+): StringifyQueryResult<T>;
+export function stringifyQuery(query: QueryObject): string;
 /**
  * Stringfies and encodes a query object into a query string.
  *
@@ -138,10 +142,6 @@ export function encodeQueryItem(
  *
  * @group Query_utils
  */
-export function stringifyQuery<const T extends QueryObject>(
-  query: T,
-): StringifyQueryResult<T>;
-export function stringifyQuery(query: QueryObject): string;
 export function stringifyQuery(query: QueryObject): string {
   return Object.keys(query)
     .filter((k) => query[k] !== undefined)

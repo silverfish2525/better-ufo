@@ -7,7 +7,6 @@ export * from "./utils";
 // Public type-level helpers (extreme type-safety surface)
 export type {
   IsStringLiteral,
-  IsUrlSafe,
   WithLeadingSlash,
   WithoutLeadingSlash,
   WithTrailingSlash,
@@ -19,11 +18,7 @@ export type {
   WithFragment,
   WithoutFragment,
   WithoutHost,
-  StringifyQuery,
-  StringifyQueryResult,
-  WithQueryResult,
   JoinURL,
-  JoinURLResult,
   ParsePath,
   ParseURL,
   ParseFilename,

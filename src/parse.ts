@@ -175,10 +175,20 @@ export function parsePath(input = ""): ParsedPath {
  * @returns An object with two properties: username and password.
  */
 export function parseAuth(input = ""): ParsedAuth {
-  const [username, password] = input.split(":");
+  // RFC 3986 §3.2.1: userinfo = *( unreserved / pct-encoded / sub-delims / ":" )
+  // The FIRST ":" splits username from password; subsequent colons are part of the password.
+  // Percent-decoding follows via `decode(...)`.
+  // TODO(v2): percent-encode userinfo per RFC 3986 §3.2.1 (mirrored on serialization side).
+  const firstColon = input.indexOf(":");
+  if (firstColon === -1) {
+    return {
+      username: decode(input),
+      password: "",
+    };
+  }
   return {
-    username: decode(username),
-    password: decode(password),
+    username: decode(input.slice(0, firstColon)),
+    password: decode(input.slice(firstColon + 1)),
   };
 }
 

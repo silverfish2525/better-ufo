@@ -20,7 +20,8 @@ describe("hasProtocol", () => {
     // No protocol
     { input: "//", out: [false, false, false] },
     { input: "///", out: [false, false, false] },
-    { input: "C:/test", out: [false, false, false] },
+    // C: looks like a 1-char scheme per RFC 3986 after {1,} fix (Windows path false-positive is now accepted)
+    { input: "C:/test", out: [true, true, true] },
     { input: "/test", out: [false, false, false] },
 
     // Has protocol (strict)
@@ -74,6 +75,22 @@ describe("hasProtocol", () => {
       expect(hasProtocol(t.input, true)).toBe(withAcceptRelative);
     });
   }
+
+  test("accepts single-character schemes (non-strict)", () => {
+    expect(hasProtocol("a://foo")).toBe(true);
+    expect(hasProtocol("s3://bucket")).toBe(true);
+    expect(hasProtocol("w://host")).toBe(true);
+  });
+
+  test("accepts single-character schemes (strict)", () => {
+    expect(hasProtocol("a://foo", { strict: true })).toBe(true);
+    expect(hasProtocol("s3://bucket", { strict: true })).toBe(true);
+  });
+
+  test("still rejects zero-length scheme", () => {
+    expect(hasProtocol("://foo", { strict: true })).toBe(false);
+    expect(hasProtocol(":foo", { strict: true })).toBe(false);
+  });
 });
 
 describe("isScriptProtocol", () => {

@@ -24,8 +24,8 @@ import type {
   JoinURLResult,
 } from "./_types";
 
-const PROTOCOL_STRICT_REGEX = /^[\s\w\0+.-]{2,}:([/\\]{1,2})/;
-const PROTOCOL_REGEX = /^[\s\w\0+.-]{2,}:([/\\]{2})?/;
+const PROTOCOL_STRICT_REGEX = /^[\s\w\0+.-]{1,}:([/\\]{1,2})/;
+const PROTOCOL_REGEX = /^[\s\w\0+.-]{1,}:([/\\]{2})?/;
 const PROTOCOL_RELATIVE_REGEX = /^([/\\]\s*){2,}[^/\\]/;
 const TRAILING_SLASH_RE = /\/$|\/\?|\/#/;
 const JOIN_LEADING_SLASH_RE = /^\.?\//;

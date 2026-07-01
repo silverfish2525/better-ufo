@@ -74,6 +74,33 @@ function isAtBaseBoundary(input: string, baseLen: number): boolean {
 }
 
 /**
+ * WHATWG "special schemes" — the only schemes for which browsers normalize `\` → `/`
+ * and apply host-based-URL treatment. Source of truth: WHATWG URL Living Standard §4.1.
+ *
+ * @group utils
+ */
+export const SPECIAL_SCHEMES: ReadonlySet<string> = new Set([
+  "http",
+  "https",
+  "ws",
+  "wss",
+  "ftp",
+  "file",
+]);
+
+/**
+ * Returns true if the given protocol/scheme is a WHATWG "special scheme"
+ * (http, https, ws, wss, ftp, file). Only these get `\` → `/` normalization
+ * and other host-based-URL treatment.
+ *
+ * @group utils
+ */
+export function isSpecialScheme(scheme?: string): boolean {
+  if (!scheme) return false;
+  return SPECIAL_SCHEMES.has(scheme.toLowerCase().replace(/:$/, ""));
+}
+
+/**
  * Check if a path starts with `./` or `../`.
  *
  * @example

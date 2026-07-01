@@ -1,5 +1,5 @@
 import { decode } from "./encoding";
-import { hasProtocol, isScriptProtocol } from "./utils";
+import { hasProtocol, isScriptProtocol, isSpecialScheme } from "./utils";
 import type {
   ParsePath as ParsePathType,
   ParseURL,
@@ -84,10 +84,16 @@ export function parseURL(input = "", defaultProto?: string): ParsedURL {
     return defaultProto ? parseURL(defaultProto + input) : parsePath(input);
   }
 
+  // Extract scheme first (no backslash normalization yet); WHATWG only normalizes
+  // `\` → `/` for "special schemes" (http, https, ws, wss, ftp, file).
+  const _schemePrefix = input.match(/^[\s\0]*([A-Za-z][A-Za-z\d+.-]*:)/);
+  const _schemeForCheck = (_schemePrefix?.[1] || "").toLowerCase();
+  const _isSpecial = isSpecialScheme(_schemeForCheck);
+  const _normalized = _isSpecial ? input.replace(/\\/g, "/") : input;
+
   const [, protocol = "", auth, hostAndPath = ""] =
-    input
-      .replace(/\\/g, "/")
-      .match(/^[\s\0]*([\w+.-]{2,}:)?\/\/([^/@]+@)?(.*)/) || [];
+    _normalized.match(/^[\s\0]*([A-Za-z][\s\w\0+.-]*:)?\/\/([^/@]+@)?(.*)/) ||
+    [];
 
   // eslint-disable-next-line prefer-const
   let [, host = "", path = ""] = hostAndPath.match(/([^#/?]*)(.*)?/) || [];

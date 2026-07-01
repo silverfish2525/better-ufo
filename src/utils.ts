@@ -29,6 +29,7 @@ const PROTOCOL_REGEX = /^[\s\w\0+.-]{2,}:([/\\]{2})?/;
 const PROTOCOL_RELATIVE_REGEX = /^([/\\]\s*){2,}[^/\\]/;
 const TRAILING_SLASH_RE = /\/$|\/\?|\/#/;
 const JOIN_LEADING_SLASH_RE = /^\.?\//;
+const JOIN_SEGMENT_SPLIT_RE = /\/(?!\/)/;
 
 /**
  * Characters that browsers strip from URL schemes per WHATWG URL, and that must therefore be
@@ -626,9 +627,6 @@ export function joinURL(
  * @group utils
  */
 export function joinRelativeURL(..._input: string[]): string {
-  // Inlined regex to increase browser compatibility
-  const JOIN_SEGMENT_SPLIT_RE = /\/(?!\/)/;
-
   const input = _input.filter(Boolean);
 
   const segments: string[] = [];

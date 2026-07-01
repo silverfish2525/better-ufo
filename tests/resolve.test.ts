@@ -1,8 +1,8 @@
-import { describe, expect, test } from "vitest";
+import { describe, expect, it } from "vitest";
 import { resolveURL } from "../src";
 
 describe("resolveURL", () => {
-  test.each([
+  it.each([
     { input: [], out: "" },
     { input: ["/"], out: "/" },
     { input: ["/a"], out: "/a" },
@@ -16,19 +16,19 @@ describe("resolveURL", () => {
     expect(resolveURL(...t.input)).toBe(t.out);
   });
 
-  test("invalid URL (null)", () => {
+  it("invalid URL (null)", () => {
     expect(() => resolveURL(null as any)).toThrow(
       "URL input should be string received object (null)",
     );
   });
 
-  test("invalid URL (array)", () => {
-    expect(() => resolveURL([])).toThrow(
+  it("invalid URL (array)", () => {
+    expect(() => resolveURL([] as unknown as string)).toThrow(
       "URL input should be string received object ()",
     );
   });
 
-  test("no arguments", () => {
+  it("no arguments", () => {
     expect(resolveURL()).toBe("");
   });
 });

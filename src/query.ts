@@ -1,3 +1,4 @@
+import type { StringifyQueryItem, StringifyQueryResult } from "./_types";
 import {
   decodeQueryKey,
   decodeQueryValue,
@@ -5,24 +6,49 @@ import {
   encodeQueryValue,
 } from "./encoding";
 
-export type QueryValue =
-  | string
-  | number
-  | undefined
-  | null
-  | boolean
-  | Array<QueryValue>
-  | Record<string, any>;
+export type QueryValue
+  = | string
+    | number
+    | undefined
+    | null
+    | boolean
+    | Array<QueryValue>
+    | Record<string, any>;
 
 export type QueryObject = Record<string, QueryValue | QueryValue[]>;
 
 export type ParsedQuery = Record<string, string | string[]>;
+const AMPERSAND_CHAR_CODE = 38;
+const EQUAL_CHAR_CODE = 61;
 
-// const EmptyObject = /* @__PURE__ */ (() => {
-//   const C = function () {};
-//   C.prototype = Object.create(null);
-//   return C;
-// })() as unknown as { new (): any };
+// Blocks prototype-pollution (PR #289 by @pi0, PR #331 by @saripovdenis).
+const DANGEROUS_KEYS: ReadonlySet<string> = new Set([
+  "__proto__",
+  "constructor",
+  "prototype",
+]);
+
+function appendQueryParameter(
+  object: ParsedQuery,
+  rawKey: string,
+  rawValue: string,
+): void {
+  const key = decodeQueryKey(rawKey);
+  if (DANGEROUS_KEYS.has(key)) {
+    return;
+  }
+  const value = decodeQueryValue(rawValue);
+  const existing = object[key];
+  if (existing === undefined) {
+    object[key] = value;
+  }
+  else if (Array.isArray(existing)) {
+    existing.push(value);
+  }
+  else {
+    object[key] = [existing, value];
+  }
+}
 
 /**
  * Parses and decodes a query string into an object.
@@ -40,38 +66,66 @@ export type ParsedQuery = Record<string, string | string[]>;
  * ```
  *
  * @note
- * The `__proto__` and `constructor` keys are ignored to prevent prototype pollution.
+ * The `__proto__`, `constructor`, and `prototype` keys are ignored to prevent
+ * prototype pollution. Empty-key parameters (`=b`, `==`) preserve their value
+ * under an empty-string key, matching WHATWG `URLSearchParams`.
  *
  * @group Query_utils
  */
 export function parseQuery<T extends ParsedQuery = ParsedQuery>(
-  parametersString = "",
-): T {
-  // TODO: Use new EmptyObject() instead of Object.create(null) for better performance in next major version
-  // https://github.com/unjs/ufo/pull/290
-  const object: ParsedQuery = Object.create(null);
-  if (parametersString[0] === "?") {
-    parametersString = parametersString.slice(1);
-  }
-  for (const parameter of parametersString.split("&")) {
-    const s = parameter.match(/([^=]+)=?(.*)/) || [];
-    if (s.length < 2) {
+  parametersString?: string,
+): T;
+export function parseQuery(parametersString?: string): ParsedQuery;
+export function parseQuery(parametersString = ""): ParsedQuery {
+  // TODO(v2): Use EmptyObject() for better perf (see unjs/ufo#290).
+  const object = Object.create(null) as ParsedQuery;
+  let keyStart = -1;
+  let keyEnd = -1;
+  const stringLength = parametersString.length;
+
+  for (
+    let index = parametersString[0] === "?" ? 1 : 0;
+    index <= stringLength;
+    index++
+  ) {
+    const isEnd = index === stringLength;
+    const character = isEnd
+      ? AMPERSAND_CHAR_CODE
+      : parametersString.charCodeAt(index);
+
+    if (character === AMPERSAND_CHAR_CODE) {
+      if (keyStart !== -1) {
+        appendQueryParameter(
+          object,
+          parametersString.slice(keyStart, keyEnd === -1 ? index : keyEnd),
+          keyEnd === -1 ? "" : parametersString.slice(keyEnd + 1, index),
+        );
+      }
+      else if (keyEnd !== -1) {
+        appendQueryParameter(
+          object,
+          "",
+          parametersString.slice(keyEnd + 1, index),
+        );
+      }
+      keyStart = -1;
+      keyEnd = -1;
       continue;
     }
-    const key = decodeQueryKey(s[1]);
-    if (key === "__proto__" || key === "constructor") {
+
+    if (character === EQUAL_CHAR_CODE) {
+      if (keyEnd === -1) {
+        keyEnd = index;
+      }
+      // Subsequent `=` chars are treated as part of the value (matches URLSearchParams).
       continue;
     }
-    const value = decodeQueryValue(s[2] || "");
-    if (object[key] === undefined) {
-      object[key] = value;
-    } else if (Array.isArray(object[key])) {
-      (object[key] as string[]).push(value);
-    } else {
-      object[key] = [object[key] as string, value];
+
+    if (keyStart === -1) {
+      keyStart = index;
     }
   }
-  return object as T;
+  return object;
 }
 
 /**
@@ -91,6 +145,14 @@ export function parseQuery<T extends ParsedQuery = ParsedQuery>(
  *
  * @group Query_utils
  */
+export function encodeQueryItem<
+  const K extends string,
+  const V extends QueryValue | QueryValue[],
+>(key: K, value: V): StringifyQueryItem<K, V>;
+export function encodeQueryItem(
+  key: string,
+  value: QueryValue | QueryValue[],
+): string;
 export function encodeQueryItem(
   key: string,
   value: QueryValue | QueryValue[],
@@ -98,17 +160,22 @@ export function encodeQueryItem(
   if (typeof value === "number" || typeof value === "boolean") {
     value = String(value);
   }
-  if (!value) {
-    return encodeQueryKey(key);
-  }
 
   if (Array.isArray(value)) {
     return value
       .map(
         (_value: QueryValue) =>
-          `${encodeQueryKey(key)}=${encodeQueryValue(_value)}`,
+          `${encodeQueryKey(key)}=${_value == null || _value === "" ? "" : encodeQueryValue(_value)}`,
       )
       .join("&");
+  }
+
+  if (value === undefined) {
+    return "";
+  }
+
+  if (value === null || value === "") {
+    return `${encodeQueryKey(key)}=`;
   }
 
   return `${encodeQueryKey(key)}=${encodeQueryValue(value)}`;
@@ -129,10 +196,25 @@ export function encodeQueryItem(
  *
  * @group Query_utils
  */
+export function stringifyQuery<const T extends QueryObject>(
+  query: T,
+): StringifyQueryResult<T>;
+export function stringifyQuery(query: QueryObject): string;
 export function stringifyQuery(query: QueryObject): string {
-  return Object.keys(query)
-    .filter((k) => query[k] !== undefined)
-    .map((k) => encodeQueryItem(k, query[k]))
-    .filter(Boolean)
-    .join("&");
+  // Single-pass builder (PR #333 by @saripovdenis).
+  let result = "";
+  for (const key in query) {
+    if (!Object.hasOwn(query, key)) {
+      continue;
+    }
+    const value: QueryValue | QueryValue[] = query[key];
+    if (value === undefined) {
+      continue;
+    }
+    const item = encodeQueryItem(key, value);
+    if (item) {
+      result += result ? `&${item}` : item;
+    }
+  }
+  return result;
 }

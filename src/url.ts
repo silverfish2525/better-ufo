@@ -1,16 +1,17 @@
-import { parseURL, parseAuth, parseHost } from "./parse";
-import { QueryObject, parseQuery, stringifyQuery } from "./query";
-import { withoutLeadingSlash, withTrailingSlash } from "./utils";
+import type { QueryObject } from "./query";
 import {
-  encodeHash,
-  encodePath,
-  decodePath,
   decode,
+  decodePath,
+  encodeHash,
   encodeHost,
+  encodePath,
 } from "./encoding";
+import { parseAuth, parseHost, parseURL } from "./parse";
+import { parseQuery, stringifyQuery } from "./query";
+import { withoutLeadingSlash, withTrailingSlash } from "./utils";
 
 /**
- * @deprecated use native URL with `new URL(input)` or `ufo.parseURL(input)`
+ * @deprecated use native URL with `new URL(input)` or `parseURL(input)`
  */
 export class $URL implements URL {
   protocol: string;
@@ -23,7 +24,7 @@ export class $URL implements URL {
   constructor(input = "") {
     if (typeof input !== "string") {
       throw new TypeError(
-        `URL input should be string received ${typeof input} (${input})`,
+        `URL input should be string received ${typeof input} (${String(input)})`,
       );
     }
 
@@ -42,7 +43,7 @@ export class $URL implements URL {
   }
 
   get port(): string {
-    return parseHost(this.host).port || "";
+    return parseHost(this.host).port ?? "";
   }
 
   get username(): string {
@@ -53,7 +54,7 @@ export class $URL implements URL {
     return parseAuth(this.auth).password || "";
   }
 
-  get hasProtocol() {
+  get hasProtocol(): number {
     return this.protocol.length;
   }
 
@@ -63,7 +64,7 @@ export class $URL implements URL {
 
   get search(): string {
     const q = stringifyQuery(this.query);
-    return q.length > 0 ? "?" + q : "";
+    return q.length > 0 ? `?${q}` : "";
   }
 
   get searchParams(): URLSearchParams {
@@ -72,12 +73,13 @@ export class $URL implements URL {
       const value = this.query[name];
       if (Array.isArray(value)) {
         for (const v of value) {
-          p.append(name, v);
+          p.append(name, v !== undefined && v !== null ? String(v) : "");
         }
-      } else {
+      }
+      else {
         p.append(
           name,
-          typeof value === "string" ? value : JSON.stringify(value),
+          typeof value === "string" ? value : JSON.stringify(value ?? null),
         );
       }
     }
@@ -85,7 +87,7 @@ export class $URL implements URL {
   }
 
   get origin(): string {
-    return (this.protocol ? this.protocol + "//" : "") + encodeHost(this.host);
+    return (this.protocol ? `${this.protocol}//` : "") + encodeHost(this.host);
   }
 
   get fullpath(): string {
@@ -93,28 +95,28 @@ export class $URL implements URL {
   }
 
   get encodedAuth(): string {
-    if (!this.auth) {
+    if (this.auth === "") {
       return "";
     }
     const { username, password } = parseAuth(this.auth);
     return (
-      encodeURIComponent(username) +
-      (password ? ":" + encodeURIComponent(password) : "")
+      encodeURIComponent(username)
+      + (password ? `:${encodeURIComponent(password)}` : "")
     );
   }
 
   get href(): string {
     const auth = this.encodedAuth;
-    const originWithAuth =
-      (this.protocol ? this.protocol + "//" : "") +
-      (auth ? auth + "@" : "") +
-      encodeHost(this.host);
-    return this.hasProtocol && this.isAbsolute
+    const originWithAuth
+      = (this.protocol ? `${this.protocol}//` : "")
+        + (auth ? `${auth}@` : "")
+        + encodeHost(this.host);
+    return this.hasProtocol !== 0 && this.isAbsolute
       ? originWithAuth + this.fullpath
       : this.fullpath;
   }
 
-  append(url: $URL) {
+  append(url: $URL): void {
     if (url.hasProtocol) {
       throw new Error("Cannot append a URL with protocol");
     }
@@ -122,8 +124,8 @@ export class $URL implements URL {
     Object.assign(this.query, url.query);
 
     if (url.pathname) {
-      this.pathname =
-        withTrailingSlash(this.pathname) + withoutLeadingSlash(url.pathname);
+      this.pathname
+        = withTrailingSlash(this.pathname) + withoutLeadingSlash(url.pathname);
     }
 
     if (url.hash) {
@@ -141,7 +143,7 @@ export class $URL implements URL {
 }
 
 /**
- * @deprecated use native URL with `new URL(input)` or `ufo.parseURL(input)`
+ * @deprecated use native URL with `new URL(input)` or `parseURL(input)`
  */
 export function createURL(input: string): $URL {
   return new $URL(input);

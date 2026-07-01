@@ -1,0 +1,161 @@
+import type { Refine, WithoutHost } from "../_types";
+import { parseURL, stringifyParsedURL } from "../parse";
+import { hasProtocol } from "./protocol";
+
+/**
+ * Removes the host from the URL while preserving everything else.
+ *
+ * @example
+ * ```js
+ * withoutHost("http://example.com/foo?q=123#bar")
+ * // Returns "/foo?q=123#bar"
+ * ```
+ *
+ * @group utils
+ */
+export function withoutHost<const S extends string>(
+  input: S,
+): Refine<S, WithoutHost<S>>;
+export function withoutHost(input: string): string;
+export function withoutHost(input: string): string {
+  if (
+    !hasProtocol(input, { acceptRelative: true })
+    && input.length > 0
+    && (input[0] === "/" || input[0] === "?" || input[0] === "#")
+  ) {
+    return input[0] === "/" ? input : `/${input}`;
+  }
+  const parsed = parseURL(input);
+  return (parsed.pathname || "/") + parsed.search + parsed.hash;
+}
+
+function hasNoAuthoritySlot(input: string): boolean {
+  return (
+    !hasProtocol(input, { acceptRelative: true })
+    && input.length > 0
+    && (input[0] === "/" || input[0] === "?" || input[0] === "#")
+  );
+}
+
+/**
+ * Sets or replaces the host authority slot, preserving `auth`, port, path,
+ * search, and hash. Relative inputs (no scheme, no leading `//`) are
+ * returned unchanged — `withHost` is a *replace* operator, not a
+ * promote-to-absolute* operator.
+ *
+ * @example
+ * ```js
+ * withHost("http://example.com/foo?x=1#h", "other.com")
+ * // Returns "http://other.com/foo?x=1#h"
+ *
+ * withHost("http://user:pw@example.com:8080/x", "new.com")
+ * // Returns "http://user:pw@new.com:8080/x"    (auth + port preserved)
+ *
+ * withHost("/only/path", "example.com")
+ * // Returns "/only/path"                       (no-op on relative input)
+ * ```
+ *
+ * @group utils
+ */
+export function withHost(input: string, host: string): string {
+  if (hasNoAuthoritySlot(input)) {
+    return input;
+  }
+  const parsed = parseURL(input);
+  parsed.host = host;
+  return stringifyParsedURL(parsed);
+}
+
+/**
+ * Sets or replaces the port slot. Accepts `string | number` for ergonomics.
+ * Passing `0`, an empty string, or a value outside the 1..65535 range throws
+ * `TypeError` — use `withoutPort` to strip.
+ *
+ * @example
+ * ```js
+ * withPort("http://example.com/x", 8080)   // "http://example.com:8080/x"
+ * withPort("http://example.com:80/x", 443) // "http://example.com:443/x"
+ * withPort("/only/path", 8080)             // "/only/path"  (no-op)
+ * ```
+ *
+ * @group utils
+ */
+export function withPort(input: string, port: string | number): string {
+  const portString = validatePort(port);
+  if (hasNoAuthoritySlot(input)) {
+    return input;
+  }
+  const parsed = parseURL(input);
+  const host = parsed.host ?? "";
+  if (host === "") {
+    return input;
+  }
+  const hostname = host.replace(/:\d+$/, "").replace(/^(\[[^\]]*\]).*$/, "$1");
+  parsed.host = `${hostname}:${portString}`;
+  return stringifyParsedURL(parsed);
+}
+
+function validatePort(port: string | number): string {
+  const n = typeof port === "number" ? port : Number(port);
+  if (!Number.isInteger(n) || n < 1 || n > 65_535) {
+    throw new TypeError(
+      `withPort: expected integer in [1, 65535], got ${JSON.stringify(port)}. `
+      + `Use withoutPort() to strip the port.`,
+    );
+  }
+  return String(n);
+}
+
+/**
+ * Strips the port from an absolute URL's authority, leaving everything else
+ * untouched. No-op on relative inputs or URLs without a port.
+ *
+ * @example
+ * ```js
+ * withoutPort("http://example.com:8080/x") // "http://example.com/x"
+ * withoutPort("http://example.com/x")      // "http://example.com/x"
+ * withoutPort("/relative/path")            // "/relative/path"
+ * ```
+ *
+ * @group utils
+ */
+export function withoutPort(input: string): string {
+  if (hasNoAuthoritySlot(input)) {
+    return input;
+  }
+  const parsed = parseURL(input);
+  const host = parsed.host;
+  if (host === "") {
+    return input;
+  }
+  parsed.host = host!.replace(/(\]|[^:](?::\d+)?):\d+$/, (_m, p1: string) => p1);
+  return stringifyParsedURL(parsed);
+}
+
+/**
+ * Strips the userinfo (`user:pass@`) prefix from an absolute URL's
+ * authority. No-op on relative inputs or URLs without userinfo.
+ *
+ * Note: setting userinfo is intentionally not provided here. Userinfo is a
+ * security-sensitive slot, and correct percent-encoding on serialisation is
+ * a v2 change (see `TODO(v2)` in `parseAuth`). A safe `withAuth` will land
+ * once that fix is in.
+ *
+ * @example
+ * ```js
+ * withoutAuth("http://user:pw@example.com/x") // "http://example.com/x"
+ * withoutAuth("http://user@example.com/x")    // "http://example.com/x"
+ * withoutAuth("http://example.com/x")         // "http://example.com/x"
+ * withoutAuth("/relative/path")               // "/relative/path"
+ * ```
+ *
+ * @group utils
+ */
+export function withoutAuth(input: string): string {
+  if (hasNoAuthoritySlot(input)) {
+    return input;
+  }
+  const parsed = parseURL(input);
+  parsed.auth = "";
+  return stringifyParsedURL(parsed);
+}

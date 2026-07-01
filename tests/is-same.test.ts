@@ -1,4 +1,4 @@
-import { describe, expect, test } from "vitest";
+import { describe, expect, it } from "vitest";
 import { isSamePath } from "../src";
 
 describe("isSamePath", () => {
@@ -11,14 +11,14 @@ describe("isSamePath", () => {
 
   const notSamePaths = [["/foo", "/bar"]];
 
-  for (const [u1, u2] of samePaths) {
-    test(u1 + " == " + u2, () => {
+  for (const [u1 = "", u2 = ""] of samePaths) {
+    it(`${u1} == ${u2}`, () => {
       expect(isSamePath(u1, u2)).toBe(true);
     });
   }
 
-  for (const [u1, u2] of notSamePaths) {
-    test(u1 + " != " + u2, () => {
+  for (const [u1 = "", u2 = ""] of notSamePaths) {
+    it(`${u1} != ${u2}`, () => {
       expect(isSamePath(u1, u2)).toBe(false);
     });
   }

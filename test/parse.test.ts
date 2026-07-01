@@ -369,6 +369,110 @@ describe("parseURL", () => {
       }
     }
   });
+
+  describe("CORR-06: opaque-scheme URIs (mailto:, tel:, urn:, http:foo, sms:)", () => {
+    // RFC 3986 §3: `scheme:opaque-part`. ufo surfaces opaque-part as `pathname` (Option A;
+    // matches WHATWG `new URL("mailto:...").pathname`).
+    it("populates protocol and pathname for mailto:", () => {
+      expect(parseURL("mailto:a@b.com")).toMatchObject({
+        protocol: "mailto:",
+        auth: "",
+        host: "",
+        pathname: "a@b.com",
+        search: "",
+        hash: "",
+      });
+    });
+
+    it("populates protocol and pathname for tel:", () => {
+      expect(parseURL("tel:+1-555-1234")).toMatchObject({
+        protocol: "tel:",
+        auth: "",
+        host: "",
+        pathname: "+1-555-1234",
+        search: "",
+        hash: "",
+      });
+    });
+
+    it("populates protocol and pathname for urn: (opaque-part may contain colons)", () => {
+      expect(parseURL("urn:isbn:0451450523")).toMatchObject({
+        protocol: "urn:",
+        auth: "",
+        host: "",
+        pathname: "isbn:0451450523",
+        search: "",
+        hash: "",
+      });
+    });
+
+    it("populates protocol and pathname for sms:", () => {
+      expect(parseURL("sms:+15551234")).toMatchObject({
+        protocol: "sms:",
+        auth: "",
+        host: "",
+        pathname: "+15551234",
+        search: "",
+        hash: "",
+      });
+    });
+
+    it("treats scheme-without-slash as opaque (http:foo)", () => {
+      expect(parseURL("http:foo")).toMatchObject({
+        protocol: "http:",
+        auth: "",
+        host: "",
+        pathname: "foo",
+        search: "",
+        hash: "",
+      });
+    });
+
+    it("splits query and fragment from opaque-part when present", () => {
+      expect(parseURL("mailto:a@b.com?subject=hi#frag")).toMatchObject({
+        protocol: "mailto:",
+        auth: "",
+        host: "",
+        pathname: "a@b.com",
+        search: "?subject=hi",
+        hash: "#frag",
+      });
+    });
+
+    // Regression control: hierarchical URLs still parse the same way (host branch, not opaque).
+    it("regression: http://foo still hits the hierarchical branch (host = 'foo')", () => {
+      expect(parseURL("http://foo")).toMatchObject({
+        protocol: "http:",
+        auth: "",
+        host: "foo",
+        pathname: "",
+      });
+    });
+
+    // Regression control: `_specialProtoMatch` schemes still use their own branch (with .href).
+    it("regression: data: still uses the special branch and includes .href", () => {
+      const r = parseURL("data:text/plain,x");
+      expect(r.protocol).toBe("data:");
+      expect(r.pathname).toBe("text/plain,x");
+      // The special branch attaches `.href`; the opaque branch does not.
+      expect(r.href).toBe("data:text/plain,x");
+    });
+
+    // Round-trip: stringifyParsedURL(parseURL(x)) === x for every opaque URL.
+    for (const url of [
+      "mailto:a@b.com",
+      "tel:+1-555-1234",
+      "urn:isbn:0451450523",
+      "sms:+15551234",
+      "http:foo",
+      "data:text/plain,x",
+      "mailto:a@b.com?subject=hi#frag",
+    ]) {
+      it(`round-trip: stringifyParsedURL(parseURL(${JSON.stringify(url)})) === input`, () => {
+        expect(stringifyParsedURL(parseURL(url))).toBe(url);
+      });
+    }
+  });
 });
 
 describe("parseHost", () => {

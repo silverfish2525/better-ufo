@@ -5,6 +5,7 @@ import {
   parseFilename,
   parseAuth,
   isScriptProtocol,
+  stringifyParsedURL,
 } from "../src";
 
 describe("parseURL", () => {
@@ -420,44 +421,83 @@ describe("parseAuth", () => {
   });
 });
 
-describe("parseHost — IPv6 (characterization)", () => {
-  it("parses an IPv4-style host:port control case correctly", () => {
-    // Control — proves parseHost works for the non-IPv6 path.
-    // If this ever fails, do NOT edit it here — it means a fix in src/parse.ts
-    // regressed the non-IPv6 case, which is a separate bug.
+describe("parseHost — IPv6", () => {
+  it("parses a non-IPv6 host:port (control — non-IPv6 fast path)", () => {
     expect(parseHost("example.com:8080")).toStrictEqual({
       hostname: "example.com",
       port: "8080",
     });
   });
 
-  // FIXME(CORR-01): plan 005 changes these to correctly extract the bracketed
-  // IPv6 address and (if present) the port after the closing bracket. Today
-  // parseHost splits on the first ":", which is inside the address.
-  // Expected after plan 005 (for reference — do NOT assert this yet):
-  //   parseHost("[::1]:8080")           -> { hostname: "::1", port: "8080" }
-  //   parseHost("[::1]")                -> { hostname: "::1" }
-  //   parseHost("[2001:db8::1]:443")    -> { hostname: "2001:db8::1", port: "443" }
-  // See src/parse.ts. When plan 005 lands, update these expected values and
-  // remove the FIXME markers.
-  it("currently mangles [::1]:8080 (buggy — see FIXME)", () => {
+  it("parses [::1]:8080 as hostname='[::1]' + port='8080'", () => {
     expect(parseHost("[::1]:8080")).toStrictEqual({
-      hostname: "[",
-      port: undefined,
+      hostname: "[::1]",
+      port: "8080",
     });
   });
 
-  it("currently mangles [::1] with no port (buggy — see FIXME)", () => {
+  it("parses [::1] with no port", () => {
     expect(parseHost("[::1]")).toStrictEqual({
-      hostname: "[",
+      hostname: "[::1]",
       port: undefined,
     });
   });
 
-  it("currently mangles [2001:db8::1]:443 (buggy — see FIXME)", () => {
+  it("parses [2001:db8::1]:443", () => {
     expect(parseHost("[2001:db8::1]:443")).toStrictEqual({
-      hostname: "[2001",
+      hostname: "[2001:db8::1]",
+      port: "443",
+    });
+  });
+
+  it("parses the unspecified address [::]", () => {
+    expect(parseHost("[::]")).toStrictEqual({
+      hostname: "[::]",
       port: undefined,
     });
+  });
+
+  it("preserves the raw input for a malformed unclosed bracket", () => {
+    // No throw; permissive parse. Callers can validate downstream.
+    expect(parseHost("[::1")).toStrictEqual({
+      hostname: "[::1",
+      port: undefined,
+    });
+  });
+
+  it("returns undefined port for [::1]: with an empty port segment", () => {
+    // Trailing ":" with no digits — treat as no port, do not surface "".
+    expect(parseHost("[::1]:")).toStrictEqual({
+      hostname: "[::1]",
+      port: undefined,
+    });
+  });
+
+  it("keeps IPv6 zone-id inside the hostname verbatim (see TODO(v2))", () => {
+    // Zone-id normalization is deferred (see TODO(v2) comment in src/parse.ts).
+    // For now assert current behavior so the deferral is explicit and any change
+    // to zone-id handling has to update this test.
+    // Note: decode() percent-decodes the hostname, so %25 -> % in the returned value.
+    expect(parseHost("[fe80::1%25eth0]:80")).toStrictEqual({
+      hostname: "[fe80::1%eth0]",
+      port: "80",
+    });
+  });
+});
+
+describe("parseURL — IPv6 round-trip", () => {
+  it("stringifyParsedURL(parseURL(x)) === x for a bracketed IPv6 URL with port", () => {
+    const input = "http://[::1]:8080/x";
+    expect(stringifyParsedURL(parseURL(input))).toBe(input);
+  });
+
+  it("stringifyParsedURL(parseURL(x)) === x for a bracketed IPv6 URL without port", () => {
+    const input = "http://[::1]/x";
+    expect(stringifyParsedURL(parseURL(input))).toBe(input);
+  });
+
+  it("stringifyParsedURL(parseURL(x)) === x for a full IPv6 URL with port", () => {
+    const input = "https://[2001:db8::1]:443/api?q=1#top";
+    expect(stringifyParsedURL(parseURL(input))).toBe(input);
   });
 });

@@ -160,20 +160,47 @@ export function parseAuth(input = ""): ParsedAuth {
 /**
  * Takes a string, and returns an object with two properties: `hostname` and `port`.
  *
+ * IPv6 authorities must be wrapped in `[...]` per WHATWG. The returned `hostname`
+ * keeps the surrounding brackets to match `new URL(...).hostname` in Node/browsers,
+ * so `stringifyParsedURL` and `$URL.href` re-emit the address unchanged.
+ *
  * @example
  *
  * ```js
  * parseHost("foo.com:8080");
  * // { hostname: 'foo.com', port: '8080' }
+ *
+ * parseHost("[::1]:8080");
+ * // { hostname: '[::1]', port: '8080' }
  * ```
  *
  * @group parsing_utils
  *
  * @param [input] - The URL to parse.
- * @returns A function that takes a string and returns an object with two properties: `hostname` and
- * `port`.
+ * @returns An object with `hostname` and `port` (the port is undefined when absent).
  */
 export function parseHost(input = ""): ParsedHost {
+  // TODO(v2): IPv6 zone-id normalization (e.g. "[fe80::1%25eth0]" — the "%25eth0"
+  // suffix inside the brackets). Currently returned verbatim inside the hostname;
+  // callers do not decode the zone-id.
+  if (input.startsWith("[")) {
+    const end = input.indexOf("]");
+    if (end === -1) {
+      // Malformed: unclosed bracket. Return the input verbatim as hostname; no port.
+      return { hostname: decode(input), port: undefined as unknown as string };
+    }
+    const hostname = decode(input.slice(0, end + 1)); // keep brackets — matches WHATWG URL.hostname
+    const rest = input.slice(end + 1);
+    if (rest.startsWith(":")) {
+      const p = rest.slice(1);
+      return {
+        hostname,
+        port: (p.length > 0 ? p : undefined) as unknown as string,
+      };
+    }
+    return { hostname, port: undefined as unknown as string };
+  }
+  // Non-IPv6 fast path — preserve historical regex-based behavior.
   const [hostname, port] = (input.match(/([^/:]*):?(\d+)?/) || []).splice(1);
   return {
     hostname: decode(hostname),

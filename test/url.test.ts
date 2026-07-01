@@ -74,3 +74,30 @@ describe("$URL", () => {
     }
   });
 });
+
+describe("$URL — IPv6", () => {
+  test("hostname keeps the brackets and port is separated correctly", () => {
+    const url = new $URL("http://[::1]:8080/x");
+    expect(url.host).toBe("[::1]:8080");
+    expect(url.hostname).toBe("[::1]");
+    expect(url.port).toBe("8080");
+    expect(url.href).toBe("http://[::1]:8080/x");
+    expect(url.toString()).toBe(url.href);
+  });
+
+  test("hostname keeps the brackets and port is empty when omitted", () => {
+    const url = new $URL("http://[::1]/x");
+    expect(url.host).toBe("[::1]");
+    expect(url.hostname).toBe("[::1]");
+    expect(url.port).toBe("");
+    expect(url.href).toBe("http://[::1]/x");
+  });
+
+  test("full IPv6 with port round-trips through .href", () => {
+    const input = "https://[2001:db8::1]:443/api?q=1#top";
+    const url = new $URL(input);
+    expect(url.hostname).toBe("[2001:db8::1]");
+    expect(url.port).toBe("443");
+    expect(url.href).toBe(input);
+  });
+});

@@ -114,11 +114,16 @@ parseFilename("/path/to/.hidden-file", { strict: true });
 
 Takes a string, and returns an object with two properties: `hostname` and `port`.
 
+IPv6 authorities must be wrapped in `[...]` per WHATWG. The returned `hostname` keeps the surrounding brackets to match `new URL(...).hostname` in Node/browsers, so `stringifyParsedURL` and `$URL.href` re-emit the address unchanged.
+
 **Example:**
 
 ```js
 parseHost("foo.com:8080");
 // { hostname: 'foo.com', port: '8080' }
+
+parseHost("[::1]:8080");
+// { hostname: '[::1]', port: '8080' }
 ```
 
 ### `parsePath(input)`

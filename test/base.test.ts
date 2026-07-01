@@ -83,12 +83,9 @@ describe("withBase — fragment characterization", () => {
     expect(withBase("/foo?q=1", "/foo")).toBe("/foo?q=1");
   });
 
-  // FIXME(CORR-02): plan 006 changes this to "/foo#h" (base already present,
-  // fragment must not defeat the base-match check). Today the "#" character
-  // breaks the base-startsWith comparison and the base is prefixed a second
-  // time. See src/utils.ts (withBase).
-  it("currently double-prefixes the base when a fragment is present (buggy — see FIXME)", () => {
-    expect(withBase("/foo#h", "/foo")).toBe("/foo/foo#h");
+  it("does not double-prefix the base when a fragment is present", () => {
+    // CORR-02 regression guard. See advisor-plans/006-*.
+    expect(withBase("/foo#h", "/foo")).toBe("/foo#h");
   });
 });
 
@@ -98,10 +95,78 @@ describe("withoutBase — fragment characterization", () => {
     expect(withoutBase("/foo?q=1", "/foo")).toBe("/?q=1");
   });
 
-  // FIXME(CORR-04): plan 006 changes this to "/#h" (base stripped, fragment
-  // preserved). Today the "#" defeats the base-match check and the input is
-  // returned unchanged. See src/utils.ts (withoutBase).
-  it("currently fails to strip base when a fragment is present (buggy — see FIXME)", () => {
-    expect(withoutBase("/foo#h", "/foo")).toBe("/foo#h");
+  it("strips base from a path with a fragment", () => {
+    // CORR-04 regression guard. See advisor-plans/006-*.
+    expect(withoutBase("/foo#h", "/foo")).toBe("/#h");
+  });
+});
+
+describe("withBase / withoutBase — round-trip invariant over path shapes", () => {
+  // For a "well-formed" path — one that begins with "/" and has more path depth
+  // than the base — withoutBase(withBase(p, b), b) === p.
+  //
+  // Cases where p equals b or p is b + only a query/fragment suffix do NOT
+  // satisfy strict equality because withoutBase always prepends "/" (a
+  // compatibility rule locked in by the existing
+  // { base: "/api", input: "/api?test", out: "/?test" } test). Those cases are
+  // asserted via a normalized comparison below and are intentionally not part
+  // of the strict matrix. See plan 006 maintenance notes.
+  const strictCases: Array<{ p: string; b: string }> = [
+    // p does not start with b — withBase prepends, withoutBase strips back cleanly
+    { p: "/", b: "/" },
+    { p: "/", b: "/a" },
+    { p: "/", b: "/a/b" },
+    { p: "/a", b: "/" },
+    { p: "/a", b: "/a/b" },
+    { p: "/a?q=1", b: "/" },
+    { p: "/a?q=1", b: "/a/b" },
+    { p: "/a#f", b: "/" },
+    { p: "/a#f", b: "/a/b" },
+    { p: "/a?q#f", b: "/" },
+    { p: "/a?q#f", b: "/a/b" },
+    { p: "/a/b#f", b: "/" },
+  ];
+
+  for (const { p, b } of strictCases) {
+    it(`round-trip: p=${JSON.stringify(p)}, b=${JSON.stringify(b)}`, () => {
+      expect(withoutBase(withBase(p, b), b)).toBe(p);
+    });
+  }
+
+  // Documented deviations — when p equals b or p is b + only a suffix (query /
+  // fragment), withoutBase strips the full base and prepends "/", so the result
+  // is NOT equal to p. Asserted so any future refactor that "fixes" this becomes
+  // a visible, deliberate breaking change rather than silent drift.
+  // See plan 006 maintenance notes and the locked-in test
+  // { base: "/api", input: "/api?test", out: "/?test" }.
+  it("suffix-only fragment: withoutBase adds a leading slash (documented deviation)", () => {
+    expect(withoutBase(withBase("#f", "/a"), "/a")).toBe("/#f");
+  });
+  it("suffix-only query: withoutBase adds a leading slash (documented deviation)", () => {
+    expect(withoutBase(withBase("?q", "/a"), "/a")).toBe("/?q");
+  });
+  // p equals b: withoutBase reduces to "/"
+  it("p equals b: withoutBase returns '/' (documented deviation)", () => {
+    expect(withoutBase(withBase("/a", "/a"), "/a")).toBe("/");
+  });
+  // p is b + query: strips to /?query
+  it("p is base + query: withoutBase strips to /?query (documented deviation)", () => {
+    expect(withoutBase(withBase("/a?q=1", "/a"), "/a")).toBe("/?q=1");
+  });
+  // p is b + fragment: strips to /#f
+  it("p is base + fragment: withoutBase strips to /#f (documented deviation)", () => {
+    expect(withoutBase(withBase("/a#f", "/a"), "/a")).toBe("/#f");
+  });
+  // p is b + query + fragment: strips to /?query#fragment
+  it("p is base + query + fragment: withoutBase strips to /?q#f (documented deviation)", () => {
+    expect(withoutBase(withBase("/a?q#f", "/a"), "/a")).toBe("/?q#f");
+  });
+  // p is b/c + fragment, b is a prefix: withBase keeps, withoutBase strips correctly
+  it("p is /a/b#f with base /a: strips to /b#f (documented deviation)", () => {
+    expect(withoutBase(withBase("/a/b#f", "/a"), "/a")).toBe("/b#f");
+  });
+  // p is b + /child + fragment, b is exact: strips to /#f
+  it("p is /a/b#f with base /a/b: strips to /#f (documented deviation)", () => {
+    expect(withoutBase(withBase("/a/b#f", "/a/b"), "/a/b")).toBe("/#f");
   });
 });

@@ -617,7 +617,6 @@ export function joinURL(
 
   for (const segment of segments) {
     if (url) {
-      // TODO: Handle .. when joining
       const _segment = segment.replace(JOIN_LEADING_SLASH_RE, "");
       url = withTrailingSlash(url) + _segment;
     } else {

@@ -10,13 +10,13 @@
     "See CREDITS.md for the 17 upstream contributors whose work is preserved."
   ],
   "license": "MIT",
-  "homepage": "https://github.com/silverfish2525/ufo#readme",
+  "homepage": "https://github.com/silverfish2525/better-ufo#readme",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/silverfish2525/ufo.git"
+    "url": "git+https://github.com/silverfish2525/better-ufo.git"
   },
   "bugs": {
-    "url": "https://github.com/silverfish2525/ufo/issues"
+    "url": "https://github.com/silverfish2525/better-ufo/issues"
   },
   "keywords": [
     "url",

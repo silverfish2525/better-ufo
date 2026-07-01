@@ -5,7 +5,7 @@
 To report a security vulnerability in `better-ufo`:
 
 1. **GitHub Private Security Advisory** (preferred):
-   <https://github.com/silverfish2525/ufo/security/advisories/new>
+   <https://github.com/silverfish2525/better-ufo/security/advisories/new>
 2. **Upstream fallback:** if the same bug also affects `unjs/ufo`,
    please **also** send a heads-up to
    [security+ufo@unjs.io](mailto:security+ufo@unjs.io) or submit via

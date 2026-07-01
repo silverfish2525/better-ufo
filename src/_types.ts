@@ -147,6 +147,17 @@ export type WithProtocol<
 export type WithoutFragment<S extends string> =
   S extends `${infer Before}#${string}` ? Before : S;
 
+/**
+ * Strip the query string (`?...`) from a URL literal, preserving path and
+ * fragment. Base + fragment are re-joined losslessly.
+ */
+export type WithoutQuery<S extends string> =
+  S extends `${infer Head}?${infer Rest}`
+    ? Rest extends `${string}#${infer Frag}`
+      ? `${Head}#${Frag}`
+      : Head
+    : S;
+
 export type WithFragment<
   Input extends string,
   Hash extends string,

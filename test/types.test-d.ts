@@ -5,6 +5,7 @@ import {
   stringifyQuery,
   encodeQueryItem,
   withQuery,
+  withoutQuery,
   joinURL,
   withLeadingSlash,
   withoutLeadingSlash,
@@ -215,5 +216,28 @@ describe("parsing", () => {
 
   test("dynamic input keeps the base struct", () => {
     expectTypeOf(parsePath(dyn)).toEqualTypeOf<ReturnType<typeof parsePath>>();
+  });
+});
+
+describe("withoutQuery", () => {
+  test("dynamic string stays string", () => {
+    declare const dyn: string;
+    expectTypeOf(withoutQuery(dyn)).toEqualTypeOf<string>();
+  });
+
+  test("literal input with query+fragment yields refined literal", () => {
+    expectTypeOf(
+      withoutQuery("https://a.com/b?x=1#h"),
+    ).toEqualTypeOf<"https://a.com/b#h">();
+  });
+
+  test("literal input with query only yields path without query", () => {
+    expectTypeOf(withoutQuery("/foo?x=1")).toEqualTypeOf<"/foo">();
+  });
+
+  test("literal input without query is identity", () => {
+    expectTypeOf(
+      withoutQuery("https://a.com/b"),
+    ).toEqualTypeOf<"https://a.com/b">();
   });
 });

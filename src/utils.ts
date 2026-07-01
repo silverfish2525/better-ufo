@@ -21,6 +21,7 @@ import type {
   WithFragment,
   WithoutFragment,
   WithoutHost,
+  WithoutQuery,
   WithQueryResult,
   JoinURLResult,
 } from "./_types";
@@ -506,6 +507,30 @@ export function withQuery(input: string, query: QueryObject): string {
   const mergedQuery = { ...parseQuery(parsed.search), ...query };
   parsed.search = stringifyQuery(mergedQuery);
   return stringifyParsedURL(parsed);
+}
+
+export function withoutQuery<const S extends string>(
+  input: S,
+): Refine<S, WithoutQuery<S>>;
+export function withoutQuery(input: string): string;
+/**
+ * Removes the query string from a URL, preserving path and fragment.
+ *
+ * @example
+ *
+ * ```js
+ * withoutQuery("https://a.com/b?x=1#h")
+ * // Returns "https://a.com/b#h"
+ * ```
+ *
+ * @group utils
+ */
+export function withoutQuery(input: string): string {
+  const qIdx = input.indexOf("?");
+  if (qIdx === -1) return input;
+  const hIdx = input.indexOf("#", qIdx);
+  if (hIdx === -1) return input.slice(0, qIdx);
+  return input.slice(0, qIdx) + input.slice(hIdx);
 }
 
 /**

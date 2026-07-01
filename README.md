@@ -528,6 +528,17 @@ Removes the protocol from the input.
 withoutProtocol("http://example.com"); // "example.com"
 ```
 
+### `withoutQuery(input)`
+
+Removes the query string from a URL, preserving path and fragment.
+
+**Example:**
+
+```js
+withoutQuery("https://a.com/b?x=1#h")
+// Returns "https://a.com/b#h"
+```
+
 ### `withoutTrailingSlash(input, respectQueryAndFragment?)`
 
 Removes the trailing slash from the URL or pathname.

@@ -13,6 +13,7 @@ import {
   withFragment,
   withoutFragment,
   withoutHost,
+  withoutQuery,
 } from "../src";
 
 describe("hasProtocol", () => {
@@ -437,5 +438,31 @@ describe("withoutHost", () => {
   });
   test("slow-path: strips authority from full URL", () => {
     expect(withoutHost("https://a.com/b")).toBe("/b");
+  });
+});
+
+describe("withoutQuery", () => {
+  test("no-query input is returned unchanged (identity)", () => {
+    expect(withoutQuery("https://a.com/b")).toBe("https://a.com/b");
+  });
+
+  test("query-only: strip query, keep path", () => {
+    expect(withoutQuery("https://a.com/b?x=1")).toBe("https://a.com/b");
+  });
+
+  test("query + fragment: strip query, keep fragment", () => {
+    expect(withoutQuery("https://a.com/b?x=1#h")).toBe("https://a.com/b#h");
+  });
+
+  test("fragment-only input is returned unchanged (identity)", () => {
+    expect(withoutQuery("https://a.com/b#h")).toBe("https://a.com/b#h");
+  });
+
+  test("empty input is returned unchanged (identity)", () => {
+    expect(withoutQuery("")).toBe("");
+  });
+
+  test("relative path with query: strip query", () => {
+    expect(withoutQuery("/foo?x=1")).toBe("/foo");
   });
 });

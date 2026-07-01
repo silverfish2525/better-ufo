@@ -11,7 +11,6 @@ import {
 const PROTOCOL_STRICT_REGEX = /^[\s\w\0+.-]{2,}:([/\\]{1,2})/;
 const PROTOCOL_REGEX = /^[\s\w\0+.-]{2,}:([/\\]{2})?/;
 const PROTOCOL_RELATIVE_REGEX = /^([/\\]\s*){2,}[^/\\]/;
-const PROTOCOL_SCRIPT_RE = /^[\s\0]*(blob|data|javascript|vbscript):$/i;
 const TRAILING_SLASH_RE = /\/$|\/\?|\/#/;
 const JOIN_LEADING_SLASH_RE = /^\.?\//;
 
@@ -100,12 +99,13 @@ export function hasProtocol(
   if (typeof opts === "boolean") {
     opts = { acceptRelative: opts };
   }
+  const normalized = normalizeSchemeForProtocolChecks(inputString);
   if (opts.strict) {
-    return PROTOCOL_STRICT_REGEX.test(inputString);
+    return PROTOCOL_STRICT_REGEX.test(normalized);
   }
   return (
-    PROTOCOL_REGEX.test(inputString) ||
-    (opts.acceptRelative ? PROTOCOL_RELATIVE_REGEX.test(inputString) : false)
+    PROTOCOL_REGEX.test(normalized) ||
+    (opts.acceptRelative ? PROTOCOL_RELATIVE_REGEX.test(normalized) : false)
   );
 }
 
@@ -128,8 +128,15 @@ export function hasProtocol(
  *
  * @group utils
  */
-export function isScriptProtocol(protocol?: string) {
-  return !!protocol && PROTOCOL_SCRIPT_RE.test(protocol);
+export function isScriptProtocol(protocol?: string): boolean {
+  if (!protocol) {
+    return false;
+  }
+  const normalized = normalizeSchemeForProtocolChecks(protocol)
+    .replace(/^[\s\0]+/, "") // preserve prior tolerance for leading \s and NUL
+    .replace(/:$/, "")
+    .toLowerCase();
+  return SCRIPT_SCHEMES.has(normalized);
 }
 
 /**

@@ -1,23 +1,51 @@
+import type { QueryValue } from "./query";
 import { toASCII } from "./punycode";
-import { QueryValue } from "./query";
 
-// Utils used from https://github.com/vuejs/vue-router-next/blob/master/src/encoding.ts (Author @posva)
+const SLASH_RE = /\//g;
+const PLUS_RE = /\+/g;
 
-const HASH_RE = /#/g; // %23
-const AMPERSAND_RE = /&/g; // %26
-const SLASH_RE = /\//g; // %2F
-const EQUAL_RE = /=/g; // %3D
-const IM_RE = /\?/g; // %3F
-const PLUS_RE = /\+/g; // %2B
-
-const ENC_CARET_RE = /%5e/gi; // ^
-const ENC_BACKTICK_RE = /%60/gi; // `
-const ENC_CURLY_OPEN_RE = /%7b/gi; // {
-const ENC_PIPE_RE = /%7c/gi; // |
-const ENC_CURLY_CLOSE_RE = /%7d/gi; // }
-const ENC_SPACE_RE = /%20/gi;
+const ENC_PIPE_RE = /%7c/gi;
+const ENC_SPACE_RE = /%20/g;
 const ENC_SLASH_RE = /%2f/gi;
 const ENC_ENC_SLASH_RE = /%252f/gi;
+const ENC_HASH_RESTORE_RE = /%(?:5e|7b|7d)/gi;
+const ENC_HASH_RESTORE_MAP: Readonly<Record<string, string>> = Object.freeze({
+  "%5e": "^",
+  "%7b": "{",
+  "%7d": "}",
+});
+const RAW_QUERY_ENCODE_RE = /[!#$&'(),/:;=?@|~]/g;
+const RAW_QUERY_ENCODE_MAP: Readonly<Record<string, string>> = Object.freeze({
+  "!": "%21",
+  "#": "%23",
+  "$": "%24",
+  "&": "%26",
+  "'": "%27",
+  "(": "%28",
+  ")": "%29",
+  ",": "%2C",
+  "/": "%2F",
+  ":": "%3A",
+  ";": "%3B",
+  "=": "%3D",
+  "?": "%3F",
+  "@": "%40",
+  "|": "%7C",
+  "~": "%7E",
+});
+const RAW_PATH_ENCODE_RE = /[#&+?]/g;
+const RAW_PATH_ENCODE_MAP: Readonly<Record<string, string>> = Object.freeze({
+  "#": "%23",
+  "&": "%26",
+  "+": "%2B",
+  "?": "%3F",
+});
+function lookupCaseInsensitive(
+  table: Readonly<Record<string, string>>,
+  match: string,
+): string {
+  return table[match.toLowerCase()] ?? match;
+}
 
 /**
  * Encodes characters that need to be encoded in the path, search and hash
@@ -29,7 +57,7 @@ const ENC_ENC_SLASH_RE = /%252f/gi;
  * @returns encoded string
  */
 export function encode(text: string | number): string {
-  return encodeURI("" + text).replace(ENC_PIPE_RE, "|");
+  return encodeURI(`${text}`).replace(ENC_PIPE_RE, "|");
 }
 
 /**
@@ -41,10 +69,8 @@ export function encode(text: string | number): string {
  * @returns encoded string
  */
 export function encodeHash(text: string): string {
-  return encode(text)
-    .replace(ENC_CURLY_OPEN_RE, "{")
-    .replace(ENC_CURLY_CLOSE_RE, "}")
-    .replace(ENC_CARET_RE, "^");
+  return encode(text).replace(ENC_HASH_RESTORE_RE, m =>
+    lookupCaseInsensitive(ENC_HASH_RESTORE_MAP, m));
 }
 
 /**
@@ -59,14 +85,10 @@ export function encodeHash(text: string): string {
 export function encodeQueryValue(input: QueryValue): string {
   return (
     encode(typeof input === "string" ? input : JSON.stringify(input))
-      // Encodes the space as +, encode the + to differentiate it from the space
       .replace(PLUS_RE, "%2B")
       .replace(ENC_SPACE_RE, "+")
-      .replace(HASH_RE, "%23")
-      .replace(AMPERSAND_RE, "%26")
-      .replace(ENC_BACKTICK_RE, "`")
-      .replace(ENC_CARET_RE, "^")
-      .replace(SLASH_RE, "%2F")
+      // after encodeURI. `*` is in the map for parity but maps to itself (spec-exempt).
+      .replace(RAW_QUERY_ENCODE_RE, c => RAW_QUERY_ENCODE_MAP[c] ?? c)
   );
 }
 
@@ -79,7 +101,7 @@ export function encodeQueryValue(input: QueryValue): string {
  * @param text - string to encode
  */
 export function encodeQueryKey(text: string | number): string {
-  return encodeQueryValue(text).replace(EQUAL_RE, "%3D");
+  return encodeQueryValue(text);
 }
 
 /**
@@ -92,11 +114,8 @@ export function encodeQueryKey(text: string | number): string {
  */
 export function encodePath(text: string | number): string {
   return encode(text)
-    .replace(HASH_RE, "%23")
-    .replace(IM_RE, "%3F")
     .replace(ENC_ENC_SLASH_RE, "%2F")
-    .replace(AMPERSAND_RE, "%26")
-    .replace(PLUS_RE, "%2B");
+    .replace(RAW_PATH_ENCODE_RE, c => RAW_PATH_ENCODE_MAP[c] ?? c);
 }
 
 /**
@@ -124,9 +143,10 @@ export function encodeParam(text: string | number): string {
  */
 export function decode(text: string | number = ""): string {
   try {
-    return decodeURIComponent("" + text);
-  } catch {
-    return "" + text;
+    return decodeURIComponent(`${text}`);
+  }
+  catch {
+    return `${text}`;
   }
 }
 
@@ -167,10 +187,24 @@ export function decodeQueryValue(text: string): string {
 }
 
 /**
- * Encodes hostname with punycode encoding.
+ * Encodes hostname with punycode encoding, then percent-encodes the four
+ * authority-structural characters (`/`, `?`, `#`, `@`) so a decoded host
+ * cannot leak into path/query/fragment/userinfo slots when the host is
+ * re-serialized (SEC-20: normalizeURL host round-trip).
  *
  * @group encoding_utils
  */
-export function encodeHost(name = "") {
-  return toASCII(name);
+const HOST_STRUCTURAL_RE = /[/?#@]/g;
+const HOST_STRUCTURAL_ENCODE: Readonly<Record<string, string>> = Object.freeze({
+  "/": "%2F",
+  "?": "%3F",
+  "#": "%23",
+  "@": "%40",
+});
+function encodeHostStructural(c: string): string {
+  return HOST_STRUCTURAL_ENCODE[c] ?? c;
+}
+
+export function encodeHost(name = ""): string {
+  return toASCII(name).replace(HOST_STRUCTURAL_RE, encodeHostStructural);
 }

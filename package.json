@@ -1,48 +1,117 @@
 {
-  "name": "ufo",
-  "version": "1.6.4",
-  "description": "URL utils for humans",
-  "repository": "unjs/ufo",
+  "name": "better-ufo",
+  "type": "module",
+  "version": "1.6.4-fork.0",
+  "packageManager": "pnpm@10.33.2",
+  "description": "URL utilities for humans — a security-hardened, WHATWG-conformant, type-refined fork of ufo. Adds parseURL/joinURL/normalizeURL security guards, encoding parity with URLSearchParams.toString(), and literal-preserving TypeScript inference.",
+  "author": "silverfish2525 (fork maintainer)",
+  "contributors": [
+    "Pooya Parsa <pooya@pi0.io> (https://github.com/pi0)",
+    "See CREDITS.md for the 17 upstream contributors whose work is preserved."
+  ],
   "license": "MIT",
+  "homepage": "https://github.com/silverfish2525/ufo#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/silverfish2525/ufo.git"
+  },
+  "bugs": {
+    "url": "https://github.com/silverfish2525/ufo/issues"
+  },
+  "keywords": [
+    "url",
+    "uri",
+    "whatwg",
+    "url-parser",
+    "url-utils",
+    "typescript",
+    "type-safe",
+    "literal-types",
+    "security",
+    "open-redirect",
+    "prototype-pollution",
+    "punycode",
+    "rfc-3986",
+    "encoding",
+    "fork",
+    "ufo",
+    "better-ufo"
+  ],
   "sideEffects": false,
+  "devEngines": {
+    "packageManager": {
+      "name": "pnpm",
+      "version": "10.33.2",
+      "onFail": "warn"
+    },
+    "runtime": {
+      "name": "node",
+      "version": ">=20.0.0",
+      "onFail": "warn"
+    }
+  },
   "exports": {
     ".": {
-      "types": "./dist/index.d.ts",
-      "import": "./dist/index.mjs",
-      "require": "./dist/index.cjs",
-      "default": "./dist/index.mjs"
+      "import": {
+        "types": "./dist/index.d.mts",
+        "default": "./dist/index.mjs"
+      },
+      "require": {
+        "types": "./dist/index.d.cts",
+        "default": "./dist/index.cjs"
+      }
     },
+    "./package.json": "./package.json",
     "./*": "./*"
   },
   "main": "./dist/index.cjs",
   "module": "./dist/index.mjs",
-  "types": "./dist/index.d.ts",
+  "types": "./dist/index.d.cts",
   "files": [
+    "CREDITS.md",
+    "SECURITY.md",
     "dist"
   ],
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
   "scripts": {
-    "build": "automd && unbuild",
+    "build": "tsdown",
+    "build:docs": "automd",
     "automd": "automd",
+    "check:no-deps": "jiti scripts/check-no-runtime-deps.ts",
+    "check:knip": "knip",
+    "check:size": "pnpm build && size-limit",
     "dev": "vitest",
-    "lint": "eslint . && prettier -c src test",
-    "lint:fix": "eslint --fix . && prettier -w src test",
-    "prepack": "pnpm build",
+    "lint": "eslint --cache .",
+    "lint:fix": "eslint --cache --fix .",
+    "prepack": "automd && tsdown",
     "release": "pnpm test && changelogen --release && npm publish && git push --follow-tags",
-    "test": "pnpm lint && vitest run --typecheck"
+    "test:package": "attw --pack . && publint",
+    "typecheck": "tsc --noEmit",
+    "test:typecheck": "vitest run --typecheck",
+    "test": "pnpm check:no-deps && pnpm check:knip && pnpm lint && vitest run --typecheck"
   },
   "devDependencies": {
-    "@types/node": "^25.6.0",
-    "@vitest/coverage-v8": "^4.1.5",
+    "@antfu/eslint-config": "^9.1.0",
+    "@arethetypeswrong/cli": "^0.18.4",
+    "@size-limit/preset-small-lib": "^12.1.0",
+    "@types/node": "^26.1.0",
+    "@vitest/coverage-v8": "^4.1.9",
     "automd": "^0.4.3",
     "changelogen": "^0.6.2",
-    "eslint": "^10.2.1",
-    "eslint-config-unjs": "^0.6.2",
-    "jiti": "^2.6.1",
-    "prettier": "^3.8.3",
+    "eslint": "^10.6.0",
+    "jiti": "^2.7.0",
+    "knip": "^6.23.0",
+    "publint": "^0.3.21",
+    "size-limit": "^12.1.0",
+    "tsdown": "^0.22.3",
     "typescript": "^6.0.3",
-    "unbuild": "^3.6.1",
-    "untyped": "^2.0.0",
-    "vitest": "^4.1.5"
-  },
-  "packageManager": "pnpm@10.33.2"
+    "vite": "^8.1.2",
+    "vitest": "^4.1.9"
+  }
 }

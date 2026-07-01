@@ -2,6 +2,21 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## Unreleased
+
+### Security
+
+- **Breaking (default)**: `joinURL` and `withBase` now normalize a leading `//` in the concatenated
+  result to a single `/` to prevent open-redirect via a protocol-relative payload when the base is
+  empty or `"/"`. Callers who genuinely need protocol-relative construction must pass the new
+  `{ allowProtocolRelative: true }` option. Example:
+  - Before: `joinURL("", "//attacker.com")` → `"//attacker.com"`
+  - After:  `joinURL("", "//attacker.com")` → `"/attacker.com"`
+  - After:  `joinURL("", "//host", { allowProtocolRelative: true })` → `"//host"`
+  - Base already carrying a scheme or `//` prefix is unaffected:
+    `joinURL("//cdn.example/", "a")` → `"//cdn.example/a"` (unchanged).
+  Related prior art: `#335` (equivalent hardening in `withoutBase`).
+
 ## v1.6.4
 
 [compare changes](https://github.com/unjs/ufo/compare/v1.6.3...v1.6.4)

@@ -292,7 +292,7 @@ describe("parseFilename", () => {
     { input: ["/path/to/filename.ext", false], out: "filename.ext" },
     { input: ["/path/to/.hidden-file", false], out: ".hidden-file" },
     { input: ["/path/to/dir/", false], out: undefined },
-    { input: [".", false], out: undefined },
+    { input: [".", false], out: "." },
     { input: ["/", false], out: undefined },
     { input: ["", false], out: undefined },
     {
@@ -500,4 +500,28 @@ describe("parseURL — IPv6 round-trip", () => {
     const input = "https://[2001:db8::1]:443/api?q=1#top";
     expect(stringifyParsedURL(parseURL(input))).toBe(input);
   });
+});
+
+describe("parseFilename edge cases", () => {
+  const cases: Array<
+    [string, { strict?: boolean } | undefined, string | undefined]
+  > = [
+    ["filename.ext", undefined, "filename.ext"],
+    ["filename.ext", { strict: true }, "filename.ext"],
+    ["/filename.ext", undefined, "filename.ext"],
+    ["/a/b.ext", undefined, "b.ext"],
+    ["/a/b.ext", { strict: true }, "b.ext"],
+    ["a/b.ext", undefined, "b.ext"],
+    ["a/b.ext", { strict: true }, "b.ext"],
+    ["no-ext", undefined, "no-ext"],
+    ["no-ext", { strict: true }, undefined],
+    ["", undefined, undefined],
+    ["/", undefined, undefined],
+  ];
+  for (const [input, opts, expected] of cases) {
+    const label = `${JSON.stringify(input)} ${opts?.strict ? "(strict)" : ""}`;
+    test(label, () => {
+      expect(parseFilename(input, opts)).toBe(expected);
+    });
+  }
 });

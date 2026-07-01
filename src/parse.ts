@@ -240,8 +240,8 @@ export function stringifyParsedURL(parsed: Partial<ParsedURL>): string {
   return proto + auth + host + pathname + search + hash;
 }
 
-const FILENAME_STRICT_REGEX = /\/([^/]+\.[^/]+)$/;
-const FILENAME_REGEX = /\/([^/]+)$/;
+const FILENAME_STRICT_REGEX = /(?:^|\/)([^/]+\.[^/]+)$/;
+const FILENAME_REGEX = /(?:^|\/)([^/]+)$/;
 
 /**
  * Parses a URL and returns last segment in path as filename.

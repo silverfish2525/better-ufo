@@ -2,7 +2,19 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
-## Unreleased
+## v2.0.0 (2026-07-01)
+
+First stable release of `better-ufo` — a security-hardened, WHATWG-conformant
+fork of [`unjs/ufo@1.6.4`](https://www.npmjs.com/package/ufo/v/1.6.4). Consumers
+of the original `ufo` package can drop in via a package-manager override
+(see the [README](./README.md#drop-in-replacement-for-ufo)).
+
+The forked delta comprises: 6 security hardenings (SEC-01 through SEC-23),
+WHATWG-compliance fixes across parsing / encoding / opaque schemes / IPv6
+authorities, 5 new URL modifier APIs (`withHost`, `withPort`, `withoutPort`,
+`withoutAuth`, `withPathParameters`), a literal-preserving TypeScript inference
+engine, and a modernised zero-runtime-dep toolchain (tsdown, @antfu/eslint-config,
+type-aware ESLint, ES2022 target, Node 22+ floor).
 
 ### Breaking
 

@@ -92,7 +92,7 @@ without changing imports:
 {
   "pnpm": {
     "overrides": {
-      "ufo": "npm:better-ufo@^1.6.4-fork.0"
+      "ufo": "npm:better-ufo@^2"
     }
   }
 }

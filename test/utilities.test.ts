@@ -61,6 +61,12 @@ describe("hasProtocol", () => {
     { input: "java\vscript:alert(1)", out: [true, false, true] },
     { input: "java\fscript:alert(1)", out: [true, false, true] },
     { input: "java\u00A0script:alert(1)", out: [true, false, true] },
+
+    // SEC-03: alpha-first scheme enforcement
+    { input: "123://foo.com", out: [false, false, false] },
+    { input: "1abc://foo.com", out: [false, false, false] },
+    { input: "a2c://foo.com", out: [true, true, true] },
+    { input: "+abc://foo.com", out: [false, false, false] },
   ];
 
   for (const t of tests) {

@@ -276,18 +276,98 @@ describe("parseURL", () => {
   // FIXME: SEC-03/SEC-04 — plan 004 flips these to correct behavior in a later commit.
   // These cases pin the current buggy behavior so the fix diff is auditable.
   // Attack patterns tested as strings; no HTTP request is issued.
-  describe("SEC-03/SEC-04 pinned buggy baseline (to be flipped)", () => {
-    it("SEC-03a: digit-leading scheme is (wrongly) accepted", () => {
-      expect(parseURL("123://foo.com/x").protocol).toBe("123:");
+  describe("SEC-03: scheme validation (WHATWG/RFC 3986)", () => {
+    // Attack patterns tested as strings; no HTTP request is issued.
+    it("rejects digit-leading schemes (no protocol captured)", () => {
+      const r = parseURL("123://foo.com/x");
+      // Falls through to parsePath: protocol is absent/empty.
+      expect(r.protocol ?? "").toBe("");
+      // Falls through to parsePath: pathname holds the raw string.
+      expect(r.pathname + r.search + r.hash).toBe("123://foo.com/x");
     });
-    it("SEC-03b: non-special scheme backslash is (wrongly) normalized", () => {
-      expect(parseURL("git://a\\b/x").host).toBe("a");
+    it("accepts alpha-leading schemes with digits/plus/dot/minus", () => {
+      expect(parseURL("h2c://x/y").protocol).toBe("h2c:");
+      expect(parseURL("git+ssh://x/y").protocol).toBe("git+ssh:");
+      expect(parseURL("coap.tcp://x/y").protocol).toBe("coap.tcp:");
+      expect(parseURL("x-scheme://x/y").protocol).toBe("x-scheme:");
     });
-    it("SEC-04: multi-@ authority (wrongly) keeps second @ in host", () => {
-      expect(parseURL("http://foo@bar@example.com/x").host).toBe(
-        "bar@example.com",
-      );
+  });
+
+  describe("SEC-03: backslash normalization gated to special schemes", () => {
+    it("normalizes `\\\\` to `/` for http (special)", () => {
+      expect(parseURL(String.raw`http://a\b`).host).toBe("a");
     });
+    it("normalizes `\\\\` to `/` for https, ws, wss, ftp, file (special)", () => {
+      expect(parseURL(String.raw`https://a\b`).host).toBe("a");
+      expect(parseURL(String.raw`ws://a\b`).host).toBe("a");
+      expect(parseURL(String.raw`wss://a\b`).host).toBe("a");
+      expect(parseURL(String.raw`ftp://a\b`).host).toBe("a");
+      expect(parseURL(String.raw`file://a\b`).host).toBe("a");
+    });
+    it("PRESERVES `\\\\` for non-special schemes (git, custom, etc.)", () => {
+      expect(parseURL(String.raw`git://a\b`).host).toBe(String.raw`a\b`);
+      expect(parseURL(String.raw`ssh://a\b`).host).toBe(String.raw`a\b`);
+      expect(parseURL(String.raw`custom+x://a\b`).host).toBe(String.raw`a\b`);
+    });
+  });
+
+  describe("SEC-04: multi-@ userinfo terminates at LAST @ before path", () => {
+    // Attack patterns tested as strings; no HTTP request is issued.
+    it("resolves host to the true host after multi-@", () => {
+      const r = parseURL("http://foo@bar@example.com/x");
+      expect(r.host).toBe("example.com");
+      expect(r.auth).toBe("foo%40bar");
+      expect(r.pathname).toBe("/x");
+    });
+    it("preserves single-@ userinfo (regression control)", () => {
+      const r = parseURL("http://a@b.com/x");
+      expect(r.host).toBe("b.com");
+      expect(r.auth).toBe("a");
+      expect(r.pathname).toBe("/x");
+    });
+    it("keeps @ in the path (no authority @) untouched", () => {
+      // `foo` is the host; `/@bar/baz` is the path — no userinfo.
+      const r = parseURL("http://foo/@bar/baz");
+      expect(r.host).toBe("foo");
+      expect(r.auth).toBe("");
+      expect(r.pathname).toBe("/@bar/baz");
+    });
+    it("ignores @ that appears only after a path terminator", () => {
+      const r = parseURL("http://foo.com/?x=a@b#c@d");
+      expect(r.host).toBe("foo.com");
+      expect(r.auth).toBe("");
+    });
+
+    // Fuzz-style: multi-@ combinations verifying host never leaks.
+    // Attack patterns tested as strings; no HTTP request is issued.
+    const _hosts = ["example.com", "10.0.0.1", "a.b.c.d", "localhost"];
+    const _userinfos = [
+      "u@v",
+      "u@v@w",
+      "%40u@v",
+      "u:p@x",
+      "u@v:p",
+      "@only",
+      "a@b@c@d",
+      "user@name:pass@word",
+      "x@y%40z",
+      "trailing@",
+    ];
+    const _tails = ["/p", "/p?q=1", "/p#f", ""];
+    for (const _h of _hosts) {
+      for (const _u of _userinfos) {
+        for (const _t of _tails) {
+          const _url = `http://${_u}@${_h}${_t}`;
+          it(`host resolves to "${_h}" for ${_url}`, () => {
+            expect(parseURL(_url).host).toBe(_h);
+          });
+          if (_tails.indexOf(_t) === 0 && _userinfos.indexOf(_u) === 0) {
+            // Keep the total to ~20 by breaking after we've hit representative combos.
+            break;
+          }
+        }
+      }
+    }
   });
 });
 

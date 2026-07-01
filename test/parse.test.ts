@@ -271,6 +271,23 @@ describe("parseURL", () => {
     // The whole point of SEC-01: after the fix, the composed gate returns true.
     expect(isScriptProtocol(parsed.protocol)).toBe(true);
   });
+
+  // FIXME: SEC-03/SEC-04 — plan 004 flips these to correct behavior in a later commit.
+  // These cases pin the current buggy behavior so the fix diff is auditable.
+  // Attack patterns tested as strings; no HTTP request is issued.
+  describe("SEC-03/SEC-04 pinned buggy baseline (to be flipped)", () => {
+    it("SEC-03a: digit-leading scheme is (wrongly) accepted", () => {
+      expect(parseURL("123://foo.com/x").protocol).toBe("123:");
+    });
+    it("SEC-03b: non-special scheme backslash is (wrongly) normalized", () => {
+      expect(parseURL("git://a\\b/x").host).toBe("a");
+    });
+    it("SEC-04: multi-@ authority (wrongly) keeps second @ in host", () => {
+      expect(parseURL("http://foo@bar@example.com/x").host).toBe(
+        "bar@example.com",
+      );
+    });
+  });
 });
 
 describe("parseHost", () => {

@@ -1,5 +1,6 @@
 import { parseURL, stringifyParsedURL } from "./parse";
-import { QueryObject, parseQuery, stringifyQuery, ParsedQuery } from "./query";
+import { parseQuery, stringifyQuery } from "./query";
+import type { QueryObject, ParsedQuery } from "./query";
 import {
   decode,
   decodePath,

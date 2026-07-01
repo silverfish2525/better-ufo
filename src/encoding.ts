@@ -1,5 +1,5 @@
 import { toASCII } from "./punycode";
-import { QueryValue } from "./query";
+import type { QueryValue } from "./query";
 
 // Utils used from https://github.com/vuejs/vue-router-next/blob/master/src/encoding.ts (Author @posva)
 

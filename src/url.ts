@@ -1,5 +1,6 @@
 import { parseURL, parseAuth, parseHost } from "./parse";
-import { QueryObject, parseQuery, stringifyQuery } from "./query";
+import { parseQuery, stringifyQuery } from "./query";
+import type { QueryObject } from "./query";
 import { withoutLeadingSlash, withTrailingSlash } from "./utils";
 import {
   encodeHash,

@@ -1,10 +1,23 @@
 {
+  "$schema": "https://www.schemastore.org/tsconfig",
   "compilerOptions": {
+    // --- Module system (still ESNext at this stage; module:"preserve" comes in Stage 2) ---
     "target": "ESNext",
     "module": "ESNext",
-    "esModuleInterop": true
+    "esModuleInterop": true,
+    "moduleDetection": "force",
+    "lib": ["ESNext", "DOM"],
+    "types": [],
+    "noEmit": true,
+
+    // --- Isolation / erasure ---
+    "isolatedModules": true,
+    "verbatimModuleSyntax": true,
+    "erasableSyntaxOnly": true,
+
+    // --- DX ---
+    "noErrorTruncation": true,
+    "skipLibCheck": true
   },
-  "include": [
-    "src"
-  ]
+  "include": ["src"]
 }

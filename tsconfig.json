@@ -14,6 +14,7 @@
     "erasableSyntaxOnly": true,
 
     // --- Extra strict ---
+    "exactOptionalPropertyTypes": true,
     "noUncheckedIndexedAccess": true,
     "noUncheckedSideEffectImports": true,
     "noImplicitReturns": true,

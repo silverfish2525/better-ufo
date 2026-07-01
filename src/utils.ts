@@ -7,6 +7,22 @@ import {
   encodeHost,
   encodePath,
 } from "./encoding";
+import type {
+  Refine,
+  IsRelative,
+  HasLeadingSlash,
+  HasTrailingSlash,
+  WithLeadingSlash,
+  WithoutLeadingSlash,
+  WithTrailingSlash,
+  WithoutTrailingSlash,
+  WithProtocol,
+  WithFragment,
+  WithoutFragment,
+  WithoutHost,
+  WithQueryResult,
+  JoinURLResult,
+} from "./_types";
 
 const PROTOCOL_STRICT_REGEX = /^[\s\w\0+.-]{2,}:([/\\]{1,2})/;
 const PROTOCOL_REGEX = /^[\s\w\0+.-]{2,}:([/\\]{2})?/;
@@ -49,6 +65,10 @@ const SCRIPT_SCHEMES: ReadonlySet<string> = new Set([
  *
  * @group utils
  */
+export function isRelative<const S extends string>(
+  inputString: S,
+): IsRelative<S>;
+export function isRelative(inputString: string): boolean;
 export function isRelative(inputString: string) {
   return ["./", "../"].some((string_) => inputString.startsWith(string_));
 }
@@ -156,6 +176,13 @@ export function isScriptProtocol(protocol?: string): boolean {
  *
  * @group utils
  */
+export function hasTrailingSlash<const S extends string>(
+  input: S,
+): HasTrailingSlash<S>;
+export function hasTrailingSlash(
+  input?: string,
+  respectQueryAndFragment?: boolean,
+): boolean;
 export function hasTrailingSlash(
   input = "",
   respectQueryAndFragment?: boolean,
@@ -181,6 +208,13 @@ export function hasTrailingSlash(
  *
  * @group utils
  */
+export function withoutTrailingSlash<const S extends string>(
+  input: S,
+): Refine<S, WithoutTrailingSlash<S>>;
+export function withoutTrailingSlash(
+  input?: string,
+  respectQueryAndFragment?: boolean,
+): string;
 export function withoutTrailingSlash(
   input = "",
   respectQueryAndFragment?: boolean,
@@ -220,6 +254,13 @@ export function withoutTrailingSlash(
  *
  * @group utils
  */
+export function withTrailingSlash<const S extends string>(
+  input: S,
+): Refine<S, WithTrailingSlash<S>>;
+export function withTrailingSlash(
+  input?: string,
+  respectQueryAndFragment?: boolean,
+): string;
 export function withTrailingSlash(
   input = "",
   respectQueryAndFragment?: boolean,
@@ -249,6 +290,10 @@ export function withTrailingSlash(
  *
  * @group utils
  */
+export function hasLeadingSlash<const S extends string>(
+  input: S,
+): HasLeadingSlash<S>;
+export function hasLeadingSlash(input?: string): boolean;
 export function hasLeadingSlash(input = ""): boolean {
   return input.startsWith("/");
 }
@@ -264,6 +309,10 @@ export function hasLeadingSlash(input = ""): boolean {
  *
  * @group utils
  */
+export function withoutLeadingSlash<const S extends string>(
+  input: S,
+): Refine<S, WithoutLeadingSlash<S>>;
+export function withoutLeadingSlash(input?: string): string;
 export function withoutLeadingSlash(input = ""): string {
   return (hasLeadingSlash(input) ? input.slice(1) : input) || "/";
 }
@@ -279,6 +328,10 @@ export function withoutLeadingSlash(input = ""): string {
  *
  * @group utils
  */
+export function withLeadingSlash<const S extends string>(
+  input: S,
+): Refine<S, WithLeadingSlash<S>>;
+export function withLeadingSlash(input?: string): string;
 export function withLeadingSlash(input = ""): string {
   return hasLeadingSlash(input) ? input : "/" + input;
 }
@@ -377,6 +430,11 @@ export function withoutBase(input: string, base: string) {
  *
  * @group utils
  */
+export function withQuery<
+  const Input extends string,
+  const Q extends QueryObject,
+>(input: Input, query: Q): WithQueryResult<Input, Q>;
+export function withQuery(input: string, query: QueryObject): string;
 export function withQuery(input: string, query: QueryObject): string {
   const parsed = parseURL(input);
   const mergedQuery = { ...parseQuery(parsed.search), ...query };
@@ -458,6 +516,11 @@ export function isNonEmptyURL(url: string) {
  *
  * @group utils
  */
+export function joinURL<
+  const Base extends string,
+  const Rest extends readonly string[],
+>(base: Base, ...input: Rest): JoinURLResult<Base, Rest>;
+export function joinURL(base: string, ...input: string[]): string;
 export function joinURL(base: string, ...input: string[]): string {
   let url = base || "";
 
@@ -555,6 +618,10 @@ export function joinRelativeURL(..._input: string[]): string {
  *
  * @group utils
  */
+export function withHttp<const S extends string>(
+  input: S,
+): Refine<S, WithProtocol<S, "http://">>;
+export function withHttp(input: string): string;
 export function withHttp(input: string): string {
   return withProtocol(input, "http://");
 }
@@ -570,6 +637,10 @@ export function withHttp(input: string): string {
  *
  * @group utils
  */
+export function withHttps<const S extends string>(
+  input: S,
+): Refine<S, WithProtocol<S, "https://">>;
+export function withHttps(input: string): string;
 export function withHttps(input: string): string {
   return withProtocol(input, "https://");
 }
@@ -582,6 +653,10 @@ export function withHttps(input: string): string {
  * withoutProtocol("http://example.com"); // "example.com"
  * ```
  */
+export function withoutProtocol<const S extends string>(
+  input: S,
+): Refine<S, WithProtocol<S, "">>;
+export function withoutProtocol(input: string): string;
 export function withoutProtocol(input: string): string {
   return withProtocol(input, "");
 }
@@ -596,6 +671,11 @@ export function withoutProtocol(input: string): string {
  *
  * @group utils
  */
+export function withProtocol<const S extends string, const P extends string>(
+  input: S,
+  protocol: P,
+): Refine<S, WithProtocol<S, P>>;
+export function withProtocol(input: string, protocol: string): string;
 export function withProtocol(input: string, protocol: string): string {
   let match = input.match(PROTOCOL_REGEX);
   if (!match) {
@@ -765,6 +845,11 @@ export function isEqual(a: string, b: string, options: CompareURLOptions = {}) {
  *
  * @group utils
  */
+export function withFragment<
+  const Input extends string,
+  const Hash extends string,
+>(input: Input, hash: Hash): Refine<Input, WithFragment<Input, Hash>>;
+export function withFragment(input: string, hash: string): string;
 export function withFragment(input: string, hash: string): string {
   if (!hash || hash === "#") {
     return input;
@@ -786,6 +871,10 @@ export function withFragment(input: string, hash: string): string {
  *
  * @group utils
  */
+export function withoutFragment<const S extends string>(
+  input: S,
+): Refine<S, WithoutFragment<S>>;
+export function withoutFragment(input: string): string;
 export function withoutFragment(input: string): string {
   return stringifyParsedURL({ ...parseURL(input), hash: "" });
 }
@@ -801,6 +890,10 @@ export function withoutFragment(input: string): string {
  *
  * @group utils
  */
+export function withoutHost<const S extends string>(
+  input: S,
+): Refine<S, WithoutHost<S>>;
+export function withoutHost(input: string): string;
 export function withoutHost(input: string) {
   const parsed = parseURL(input);
   return (parsed.pathname || "/") + parsed.search + parsed.hash;

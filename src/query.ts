@@ -4,6 +4,7 @@ import {
   encodeQueryKey,
   encodeQueryValue,
 } from "./encoding";
+import type { StringifyQueryItem, StringifyQueryResult } from "./_types";
 
 export type QueryValue =
   | string
@@ -91,6 +92,14 @@ export function parseQuery<T extends ParsedQuery = ParsedQuery>(
  *
  * @group Query_utils
  */
+export function encodeQueryItem<
+  const K extends string,
+  const V extends QueryValue | QueryValue[],
+>(key: K, value: V): StringifyQueryItem<K, V>;
+export function encodeQueryItem(
+  key: string,
+  value: QueryValue | QueryValue[],
+): string;
 export function encodeQueryItem(
   key: string,
   value: QueryValue | QueryValue[],
@@ -129,6 +138,10 @@ export function encodeQueryItem(
  *
  * @group Query_utils
  */
+export function stringifyQuery<const T extends QueryObject>(
+  query: T,
+): StringifyQueryResult<T>;
+export function stringifyQuery(query: QueryObject): string;
 export function stringifyQuery(query: QueryObject): string {
   return Object.keys(query)
     .filter((k) => query[k] !== undefined)

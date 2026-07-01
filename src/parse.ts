@@ -1,5 +1,11 @@
 import { decode } from "./encoding";
 import { hasProtocol, isScriptProtocol } from "./utils";
+import type {
+  ParsePath as ParsePathType,
+  ParseURL,
+  ParseFilename,
+  Refine,
+} from "./_types";
 
 const protocolRelative = Symbol.for("ufo:protocolRelative");
 
@@ -48,6 +54,10 @@ export interface ParsedHost {
  * @param [defaultProto] - The default protocol to use if the input doesn't have one.
  * @returns A parsed URL object.
  */
+export function parseURL<const S extends string>(
+  input: S,
+): Refine<S, ParseURL<S>, ParsedURL>;
+export function parseURL(input?: string, defaultProto?: string): ParsedURL;
 export function parseURL(input = "", defaultProto?: string): ParsedURL {
   // WHATWG: browsers strip \t \n \r from schemes before matching. Do the same before the
   // dangerous-scheme fast path so `parseURL` and `isScriptProtocol` cannot disagree.
@@ -114,6 +124,10 @@ export function parseURL(input = "", defaultProto?: string): ParsedURL {
  * @param [input] - The URL to parse.
  * @returns An object with three properties: `pathname`, `search`, and `hash`.
  */
+export function parsePath<const S extends string>(
+  input: S,
+): Refine<S, ParsePathType<S>, ParsedPath>;
+export function parsePath(input?: string): ParsedPath;
 export function parsePath(input = ""): ParsedPath {
   const [pathname = "", search = "", hash = ""] = (
     input.match(/([^#?]*)(\?[^#]*)?(#.*)?/) || []
@@ -222,6 +236,17 @@ const FILENAME_REGEX = /\/([^/]+)$/;
  * @param [input] - The URL to parse.
  * @param [opts]  - Options to use while parsing
  */
+export function parseFilename<
+  const S extends string,
+  const Strict extends boolean = false,
+>(
+  input: S,
+  opts?: { strict?: Strict },
+): Refine<S, ParseFilename<S, Strict>, string | undefined>;
+export function parseFilename(
+  input?: string,
+  opts?: { strict?: boolean },
+): string | undefined;
 export function parseFilename(
   input = "",
   opts?: { strict?: boolean },

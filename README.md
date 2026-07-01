@@ -14,11 +14,11 @@ URL utilities for humans — a **security-hardened, WHATWG-conformant, type-refi
 
 ### What this fork adds
 
-- **Literal-preserving TypeScript**: `joinURL("a", "/b")` is typed as
-  `"a/b"`, `normalizeURL(literal)` returns the literal type,
-  `withQuery(base, { k: "v" })` narrows to `"base?k=v"` — dozens of
-  type-level refinements via `Refine<S, T>` so your editor catches
-  URL bugs at compile time, not runtime.
+- **Strictest possible TypeScript**: return types are inferred down to
+  the string literal — `joinURL("a", "/b")` is typed as `"a/b"`,
+  `normalizeURL("/foo")` returns `"/foo"`, `withQuery(base, { k: "v" })`
+  narrows to `"base?k=v"`. No `string` bleed. If it compiles, the shape
+  is guaranteed.
 - **Security guards**: proto-pollution filtering in `parseQuery`,
   open-redirect normalization in `joinURL` (opt-out via
   `{ allowProtocolRelative: true }`), credential-leak guard in

@@ -1,10 +1,8 @@
 {
   "$schema": "https://www.schemastore.org/tsconfig",
   "compilerOptions": {
-    // --- Module system (still ESNext at this stage; module:"preserve" comes in Stage 2) ---
-    "target": "ESNext",
-    "module": "ESNext",
-    "esModuleInterop": true,
+    // --- Module system ---
+    "module": "preserve",              // implies moduleResolution:bundler, esModuleInterop, resolveJsonModule, allowSyntheticDefaultImports
     "moduleDetection": "force",
     "lib": ["ESNext", "DOM"],
     "types": [],

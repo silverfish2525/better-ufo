@@ -8,32 +8,15 @@ on:
     branches:
       - main
 
-jobs:
-  # Runtime compatibility — proves the shipped dist runs on the library's
-  # engines.node floor. Skips the toolchain (lint, knip) because ESLint 10
-  # + @antfu/eslint-config uses eslint-plugin-unicorn which requires the
-  # V8 Iterator Helpers proposal (Node 22+).
-  runtime:
-    runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        node: [20, 22, 24]
-    steps:
-      - uses: actions/checkout@v6
-      - run: npm i -fg corepack && corepack enable
-      - uses: actions/setup-node@v6
-        with:
-          node-version: ${{ matrix.node }}
-          cache: pnpm
-      - run: pnpm install
-      - run: pnpm check:no-deps
-      - run: pnpm build
-      - run: pnpm test:package
-      - run: pnpm vitest run --typecheck
+# Node 20 was dropped in v1.6.4-fork.0 (2026-07): Node 20 is EOL (April 2026)
+# and our toolchain (tsdown / @antfu/eslint-config / eslint-plugin-unicorn)
+# hard-requires V8 Iterator Helpers, which only land in Node 22+.
+# The compiled output still targets ES2022, so downstream consumers who
+# somehow still run Node 20 will get an unsupported-engine warning but
+# the code executes; we simply don't validate it in CI.
 
-  # Toolchain — lint, knip, size-limit. Requires Node 22+ (see runtime job).
-  toolchain:
+jobs:
+  runtime:
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -47,8 +30,11 @@ jobs:
           node-version: ${{ matrix.node }}
           cache: pnpm
       - run: pnpm install
+      - run: pnpm check:no-deps
       - run: pnpm check:knip
       - run: pnpm lint
       - run: pnpm build
+      - run: pnpm test:package
       - if: matrix.node == 22
         run: pnpm exec size-limit
+      - run: pnpm vitest run --typecheck

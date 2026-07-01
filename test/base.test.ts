@@ -1,4 +1,4 @@
-import { describe, expect, test } from "vitest";
+import { describe, expect, it, test } from "vitest";
 import { withBase, withoutBase } from "../src";
 
 describe("withBase", () => {
@@ -74,4 +74,34 @@ describe("withoutBase", () => {
       expect(withoutBase(t.input, t.base)).toBe(t.out);
     });
   }
+});
+
+describe("withBase — fragment characterization", () => {
+  it("keeps query-string handling intact (control)", () => {
+    // Control — proves the "already has base" check works for the ?query case.
+    // Plan 006 must NOT regress this while fixing the # case.
+    expect(withBase("/foo?q=1", "/foo")).toBe("/foo?q=1");
+  });
+
+  // FIXME(CORR-02): plan 006 changes this to "/foo#h" (base already present,
+  // fragment must not defeat the base-match check). Today the "#" character
+  // breaks the base-startsWith comparison and the base is prefixed a second
+  // time. See src/utils.ts (withBase).
+  it("currently double-prefixes the base when a fragment is present (buggy — see FIXME)", () => {
+    expect(withBase("/foo#h", "/foo")).toBe("/foo/foo#h");
+  });
+});
+
+describe("withoutBase — fragment characterization", () => {
+  it("strips base from a path with a query string (control)", () => {
+    // Control — plan 006 must NOT regress this while fixing the # case.
+    expect(withoutBase("/foo?q=1", "/foo")).toBe("/?q=1");
+  });
+
+  // FIXME(CORR-04): plan 006 changes this to "/#h" (base stripped, fragment
+  // preserved). Today the "#" defeats the base-match check and the input is
+  // returned unchanged. See src/utils.ts (withoutBase).
+  it("currently fails to strip base when a fragment is present (buggy — see FIXME)", () => {
+    expect(withoutBase("/foo#h", "/foo")).toBe("/foo#h");
+  });
 });

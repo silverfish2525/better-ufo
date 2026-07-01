@@ -92,10 +92,10 @@ export function parseURL(input = "", defaultProto?: string): ParsedURL {
   // Disambiguation: a bare `foo:bar` string IS a valid opaque URI in RFC 3986. The only
   // reason we don't accept `123:bar` is that plan 004's regex rejects digit-leading schemes.
   const _opaqueMatch = input.match(
-    /^[\s\0]*([A-Za-z][A-Za-z0-9+.\-]*:)(?!\/\/)(.*)/,
+    /^[\s\0]*([A-Za-z][A-Za-z0-9+.-]*:)(?!\/\/)(.*)/,
   );
   if (_opaqueMatch) {
-    const [, _proto, _rest = ""] = _opaqueMatch;
+    const [, _proto = "", _rest = ""] = _opaqueMatch;
     // The opaque part still admits `?query` and `#fragment` per RFC 3986 §3 (`opaque-part`
     // is `uric_no_slash *uric`; ufo treats them the same as the hierarchical case).
     const { pathname, search, hash } = parsePath(_rest);
@@ -297,12 +297,14 @@ export function stringifyParsedURL(parsed: Partial<ParsedURL>): string {
   // any userinfo, or protocol-relative). Opaque URIs (mailto:, tel:, urn:, data:, javascript:,
   // http:foo) have `protocol` set but no host and no protocolRelative flag — they must
   // serialize as `scheme:opaque-part`, NOT `scheme://opaque-part`.
-  const hasAuthority = Boolean(host) || Boolean(auth) || Boolean(parsed[protocolRelative]);
-  const proto = parsed.protocol
-    ? parsed.protocol + (hasAuthority ? "//" : "")
-    : parsed[protocolRelative]
-      ? "//"
-      : "";
+  const hasAuthority =
+    Boolean(host) || Boolean(auth) || Boolean(parsed[protocolRelative]);
+  let proto = "";
+  if (parsed.protocol) {
+    proto = parsed.protocol + (hasAuthority ? "//" : "");
+  } else if (parsed[protocolRelative]) {
+    proto = "//";
+  }
   return proto + auth + host + pathname + search + hash;
 }
 

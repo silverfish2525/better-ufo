@@ -21,12 +21,13 @@
     "dist"
   ],
   "scripts": {
-    "build": "automd && unbuild",
+    "build": "unbuild",
+    "build:docs": "automd",
     "automd": "automd",
     "dev": "vitest",
     "lint": "eslint . && prettier -c src test",
     "lint:fix": "eslint --fix . && prettier -w src test",
-    "prepack": "pnpm build",
+    "prepack": "automd && unbuild",
     "release": "pnpm test && changelogen --release && npm publish && git push --follow-tags",
     "typecheck": "vitest run --typecheck",
     "test": "pnpm lint && vitest run --typecheck"

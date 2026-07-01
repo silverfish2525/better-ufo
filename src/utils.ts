@@ -16,6 +16,31 @@ const TRAILING_SLASH_RE = /\/$|\/\?|\/#/;
 const JOIN_LEADING_SLASH_RE = /^\.?\//;
 
 /**
+ * Characters that browsers strip from URL schemes per WHATWG URL, and that must therefore be
+ * removed BEFORE any protocol identity check. Keeping this in sync with the URL Standard means
+ * `hasProtocol("java\tscript:...")` and `parseURL("java\tscript:...").protocol` agree.
+ *
+ * Ref: https://url.spec.whatwg.org/#url-parsing (tab / newline / carriage return removal).
+ */
+const SCHEME_STRIP_RE = /[\t\n\r]/g;
+
+/** Normalize a URL string the way browsers do BEFORE any protocol check. */
+function normalizeSchemeForProtocolChecks(input: string): string {
+  return input.replace(SCHEME_STRIP_RE, "");
+}
+
+/**
+ * Canonical list of dangerous URL schemes. This is the single source of truth: add to this Set
+ * (and only this Set) if a new dangerous scheme needs to be recognized (e.g. `filesystem:`).
+ */
+const SCRIPT_SCHEMES: ReadonlySet<string> = new Set([
+  "blob",
+  "data",
+  "javascript",
+  "vbscript",
+]);
+
+/**
  * Check if a path starts with `./` or `../`.
  *
  * @example

@@ -929,6 +929,19 @@ export function withFragment(input: string, hash: string): string {
   if (!hash || hash === "#") {
     return input;
   }
+  // Fast-path: only when the input has no protocol/host normalization risk.
+  // Conservative heuristic — bail out if the pre-'#' portion may need
+  // normalization (uppercase protocol, backslashes, doubled slashes after the
+  // authority segment). parseURL lowercases the protocol and normalizes host,
+  // which the fast-path would skip.
+  const hashIdx = input.indexOf("#");
+  const preHash = hashIdx === -1 ? input : input.slice(0, hashIdx);
+  if (
+    !/[A-Z\\]/.test(preHash) && // no uppercase, no backslash
+    !/^[a-z][a-z0-9+.-]*:\/\/[^/]*\/\//.test(preHash) // no `//` after authority
+  ) {
+    return preHash + "#" + encodeHash(hash);
+  }
   const parsed = parseURL(input);
   parsed.hash = hash === "" ? "" : "#" + encodeHash(hash);
   return stringifyParsedURL(parsed);
@@ -951,6 +964,17 @@ export function withoutFragment<const S extends string>(
 ): Refine<S, WithoutFragment<S>>;
 export function withoutFragment(input: string): string;
 export function withoutFragment(input: string): string {
+  // Fast-path: no fragment present -> `parseURL` + `stringifyParsedURL`
+  // would only apply protocol/host normalization. Skip only when the input
+  // is already normalized (no uppercase letters and no backslashes in the
+  // authority-preceding portion, no doubled slashes after authority).
+  if (
+    !input.includes("#") &&
+    !/[A-Z\\]/.test(input) &&
+    !/^[a-z][a-z0-9+.-]*:\/\/[^/]*\/\//.test(input)
+  ) {
+    return input;
+  }
   return stringifyParsedURL({ ...parseURL(input), hash: "" });
 }
 
@@ -970,6 +994,20 @@ export function withoutHost<const S extends string>(
 ): Refine<S, WithoutHost<S>>;
 export function withoutHost(input: string): string;
 export function withoutHost(input: string) {
+  // Fast-path: input already has no host to strip. `hasProtocol(input,
+  // { acceptRelative: true })` returning false means no scheme AND no
+  // leading `//`, so parseURL would just parsePath(input) and return the
+  // input unchanged (pathname+search+hash === input) — modulo an empty
+  // pathname being rewritten to "/". Preserve the "|| '/'" edge here too.
+  if (
+    !hasProtocol(input, { acceptRelative: true }) &&
+    input.length > 0 &&
+    (input[0] === "/" || input[0] === "?" || input[0] === "#")
+  ) {
+    // Matches existing test case "?foo=123#hash" -> "/?foo=123#hash"
+    // and "/a/b" -> "/a/b". Keep the "|| '/'" behavior for empty pathname.
+    return input[0] === "/" ? input : "/" + input;
+  }
   const parsed = parseURL(input);
   return (parsed.pathname || "/") + parsed.search + parsed.hash;
 }

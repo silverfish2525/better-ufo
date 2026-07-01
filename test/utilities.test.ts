@@ -347,6 +347,19 @@ describe("withFragment", () => {
       expect(withFragment(t.input, t.fragment)).toBe(t.out);
     });
   }
+
+  test("fast-path: appends '#hash' to normalized input", () => {
+    expect(withFragment("https://a.com/b", "h")).toBe("https://a.com/b#h");
+  });
+  test("fast-path: replaces existing '#hash'", () => {
+    expect(withFragment("https://a.com/b#old", "new")).toBe(
+      "https://a.com/b#new",
+    );
+  });
+  test("empty hash delegates and returns input unchanged", () => {
+    const input = "https://a.com/b";
+    expect(withFragment(input, "")).toBe(input);
+  });
 });
 
 describe("withoutFragment", () => {
@@ -378,6 +391,15 @@ describe("withoutFragment", () => {
       expect(withoutFragment(t.input)).toBe(t.out);
     });
   }
+
+  test("fast-path: no '#' returns input identity", () => {
+    const input = "https://a.com/b";
+    expect(withoutFragment(input)).toBe(input);
+    expect(withoutFragment(input) === input).toBe(true);
+  });
+  test("fast-path: strips '#hash' from normalized input", () => {
+    expect(withoutFragment("https://a.com/b#h")).toBe("https://a.com/b");
+  });
 });
 
 describe("withoutHost", () => {
@@ -409,4 +431,11 @@ describe("withoutHost", () => {
       expect(withoutHost(t.input)).toBe(t.out);
     });
   }
+
+  test("fast-path: host-less input returned unchanged", () => {
+    expect(withoutHost("/a/b")).toBe("/a/b");
+  });
+  test("slow-path: strips authority from full URL", () => {
+    expect(withoutHost("https://a.com/b")).toBe("/b");
+  });
 });

@@ -1,5 +1,12 @@
-import { describe, expect, test } from "vitest";
-import { filterQuery, getQuery, withQuery } from "../src";
+import { describe, expect, it, test } from "vitest";
+import {
+  filterQuery,
+  getQuery,
+  withQuery,
+  parseQuery,
+  stringifyQuery,
+  encodeQueryItem,
+} from "../src";
 
 describe("withQuery", () => {
   const tests = [
@@ -108,4 +115,70 @@ describe("getQuery", () => {
       expect(getQuery(t)).toMatchObject(tests[t]);
     });
   }
+});
+
+describe("parseQuery", () => {
+  it("returns an empty object for an empty string", () => {
+    expect(parseQuery("")).toEqual({});
+  });
+
+  it("returns an empty object for a bare '?'", () => {
+    expect(parseQuery("?")).toEqual({});
+  });
+
+  it("parses a key with no '=' as empty-string value", () => {
+    expect(parseQuery("a")).toEqual({ a: "" });
+  });
+
+  it("parses 'a=' as empty-string value", () => {
+    expect(parseQuery("a=")).toEqual({ a: "" });
+  });
+
+  it("parses two empty-valued keys", () => {
+    expect(parseQuery("a=&b=")).toEqual({ a: "", b: "" });
+  });
+
+  it("collects repeated keys into an array of strings", () => {
+    expect(parseQuery("a=1&a=2")).toEqual({ a: ["1", "2"] });
+  });
+
+  it("decodes percent-encoded characters", () => {
+    expect(parseQuery("a=hello%20world")).toEqual({ a: "hello world" });
+  });
+
+  it("decodes '+' as space (application/x-www-form-urlencoded behavior)", () => {
+    expect(parseQuery("a=hello+world")).toEqual({ a: "hello world" });
+  });
+});
+
+describe("stringifyQuery", () => {
+  it("returns an empty string for an empty object", () => {
+    expect(stringifyQuery({})).toBe("");
+  });
+
+  it("encodes spaces as '+'", () => {
+    expect(stringifyQuery({ a: 1, b: "x y" })).toBe("a=1&b=x+y");
+  });
+
+  it("emits repeated keys for array values", () => {
+    expect(stringifyQuery({ a: [1, 2] })).toBe("a=1&a=2");
+  });
+});
+
+describe("encodeQueryItem", () => {
+  it("encodes a scalar value, converting space to '+'", () => {
+    expect(encodeQueryItem("k", "v v")).toBe("k=v+v");
+  });
+
+  it("emits repeated key=value pairs for an array value", () => {
+    expect(encodeQueryItem("k", [1, 2])).toBe("k=1&k=2");
+  });
+
+  it("emits a bare key (no '=') for null", () => {
+    expect(encodeQueryItem("k", null)).toBe("k");
+  });
+
+  it("emits a bare key (no '=') for undefined", () => {
+    expect(encodeQueryItem("k", undefined)).toBe("k");
+  });
 });

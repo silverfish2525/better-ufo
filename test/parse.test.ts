@@ -1,5 +1,5 @@
-import { describe, expect, test } from "vitest";
-import { parseURL, parseHost, parseFilename } from "../src";
+import { describe, expect, it, test } from "vitest";
+import { parseURL, parseHost, parseFilename, parseAuth } from "../src";
 
 describe("parseURL", () => {
   const tests = [
@@ -293,4 +293,81 @@ describe("parseFilename", () => {
       ).toStrictEqual(t.out);
     });
   }
+});
+
+describe("parseAuth", () => {
+  it("splits username and password on the first colon", () => {
+    expect(parseAuth("user:pass")).toStrictEqual({
+      username: "user",
+      password: "pass",
+    });
+  });
+
+  it("returns an empty password when there is no colon", () => {
+    expect(parseAuth("user")).toStrictEqual({
+      username: "user",
+      password: "",
+    });
+  });
+
+  it("returns empty username and password for an empty string", () => {
+    expect(parseAuth("")).toStrictEqual({
+      username: "",
+      password: "",
+    });
+  });
+
+  // FIXME(CORR-03): plan 007 changes this to
+  //   { username: "user", password: "pa:ss" }
+  // Today parseAuth splits on the FIRST ":" and drops the rest ("ss").
+  // See src/parse.ts. When plan 007 lands, update this expected value
+  // and remove this FIXME.
+  it("currently drops content after the second colon (buggy — see FIXME)", () => {
+    expect(parseAuth("user:pa:ss")).toStrictEqual({
+      username: "user",
+      password: "pa",
+    });
+  });
+});
+
+describe("parseHost — IPv6 (characterization)", () => {
+  it("parses an IPv4-style host:port control case correctly", () => {
+    // Control — proves parseHost works for the non-IPv6 path.
+    // If this ever fails, do NOT edit it here — it means a fix in src/parse.ts
+    // regressed the non-IPv6 case, which is a separate bug.
+    expect(parseHost("example.com:8080")).toStrictEqual({
+      hostname: "example.com",
+      port: "8080",
+    });
+  });
+
+  // FIXME(CORR-01): plan 005 changes these to correctly extract the bracketed
+  // IPv6 address and (if present) the port after the closing bracket. Today
+  // parseHost splits on the first ":", which is inside the address.
+  // Expected after plan 005 (for reference — do NOT assert this yet):
+  //   parseHost("[::1]:8080")           -> { hostname: "::1", port: "8080" }
+  //   parseHost("[::1]")                -> { hostname: "::1" }
+  //   parseHost("[2001:db8::1]:443")    -> { hostname: "2001:db8::1", port: "443" }
+  // See src/parse.ts. When plan 005 lands, update these expected values and
+  // remove the FIXME markers.
+  it("currently mangles [::1]:8080 (buggy — see FIXME)", () => {
+    expect(parseHost("[::1]:8080")).toStrictEqual({
+      hostname: "[",
+      port: undefined,
+    });
+  });
+
+  it("currently mangles [::1] with no port (buggy — see FIXME)", () => {
+    expect(parseHost("[::1]")).toStrictEqual({
+      hostname: "[",
+      port: undefined,
+    });
+  });
+
+  it("currently mangles [2001:db8::1]:443 (buggy — see FIXME)", () => {
+    expect(parseHost("[2001:db8::1]:443")).toStrictEqual({
+      hostname: "[2001",
+      port: undefined,
+    });
+  });
 });

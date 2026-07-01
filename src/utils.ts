@@ -25,8 +25,13 @@ import type {
   JoinURLResult,
 } from "./_types";
 
-const PROTOCOL_STRICT_REGEX = /^[\s\w\0+.-]{2,}:([/\\]{1,2})/;
-const PROTOCOL_REGEX = /^[\s\w\0+.-]{2,}:([/\\]{2})?/;
+// RFC 3986 §3.1 / WHATWG: scheme = ALPHA *( ALPHA / DIGIT / "+" / "-" / "." )
+// The leading [\s\0]* tolerates control-char prefixes that plan 002's SCHEME_STRIP_RE
+// normalizes away; it is NOT part of scheme validity.
+// The {1,} minimum after the leading alpha ensures single-char Windows drive letters
+// (e.g. `C:`) are not mistaken for schemes.
+const PROTOCOL_STRICT_REGEX = /^[\s\0]*[A-Za-z][A-Za-z0-9+.-]+:([/\\]{1,2})/;
+const PROTOCOL_REGEX = /^[\s\0]*[A-Za-z][\s\w\0+.-]+:([/\\]{2})?/;
 const PROTOCOL_RELATIVE_REGEX = /^([/\\]\s*){2,}[^/\\]/;
 const TRAILING_SLASH_RE = /\/$|\/\?|\/#/;
 const JOIN_LEADING_SLASH_RE = /^\.?\//;

@@ -2,6 +2,22 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## v2.0.1 (2026-07-03)
+
+Docs and repo-hygiene release. No runtime or API changes.
+
+### Documentation
+
+- Sharpened the TypeScript type-safety wording in `README.md` to more accurately
+  describe the literal-preserving inference (`parseURL`, `withHost`, `withPort`, etc.).
+
+### Chore
+
+- Added tag-triggered `.github/workflows/publish.yml` for Sigstore-provenance npm releases.
+- Dropped `publishConfig.provenance` from `package.json` so local `npm publish`
+  invocations don't require a CI OIDC token.
+- Minor repository housekeeping.
+
 ## v2.0.0 (2026-07-01)
 
 First stable release of `better-ufo` — a security-hardened, WHATWG-conformant

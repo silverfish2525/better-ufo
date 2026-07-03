@@ -1,7 +1,7 @@
 {
   "name": "better-ufo",
   "type": "module",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "packageManager": "pnpm@10.33.2",
   "description": "URL utilities for humans \u2014 a security-hardened, WHATWG-conformant, type-refined fork of ufo. Adds parseURL/joinURL/normalizeURL security guards, encoding parity with URLSearchParams.toString(), and literal-preserving TypeScript inference.",
   "author": "silverfish2525 (fork maintainer)",

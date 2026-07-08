@@ -84,6 +84,7 @@ export default defineConfig({
           ignoreTypes: false,
         },
       ],
+      "import/no-default-export": "off",
       "import/no-named-export": "off",
       "import/no-relative-parent-imports": "off",
       "no-control-regex": "off",

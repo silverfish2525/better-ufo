@@ -1,9 +1,7 @@
 import type { JoinRelativeURLResult, JoinURLResult } from "../_types";
 import type { JoinURLOptions } from "./protocol";
-// oxlint-disable-next-line import/no-cycle -- structural cycle via _modify→parse→utils barrel
 import { normalizeProtocolRelative } from "./_modify";
 import { isNonEmptyURL } from "./predicates";
-// oxlint-disable-next-line import/no-cycle -- structural cycle via protocol→utils barrel
 import { hasProtocol } from "./protocol";
 import { withTrailingSlash } from "./slash";
 

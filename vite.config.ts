@@ -69,9 +69,22 @@ export default defineConfig({
       "eslint/no-script-url": "off",
       "eslint/no-ternary": "off",
       "eslint/no-undefined": "off",
-      // "eslint/sort-imports": "off",
+      "eslint/sort-imports": [
+        "error",
+        {
+          allowSeparatedGroups: true,
+          ignoreDeclarationSort: true,
+        },
+      ],
       "import/exports-last": "off",
       "import/group-exports": "off",
+      "import/no-cycle": [
+        "error",
+        {
+          ignoreExternal: true,
+          ignoreTypes: false,
+        },
+      ],
       "import/no-named-export": "off",
       "import/no-relative-parent-imports": "off",
       "no-control-regex": "off",

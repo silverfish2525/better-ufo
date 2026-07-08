@@ -1,17 +1,7 @@
-import type { StringifyQueryItem, StringifyQueryResult } from "./_types";
+import type { QueryObject, QueryValue, StringifyQueryItem, StringifyQueryResult } from "./_types";
 import { decodeQueryKey, decodeQueryValue, encodeQueryKey, encodeQueryValue } from "./encoding";
 
-export type QueryValue =
-  | string
-  | number
-  | undefined
-  | null
-  | boolean
-  | QueryValue[]
-  // oxlint-disable-next-line typescript/no-explicit-any -- `unknown` breaks literal-preserving key ordering in type-level tests
-  | Record<string, any>;
-
-export type QueryObject = Record<string, QueryValue | QueryValue[]>;
+export type { QueryObject, QueryValue } from "./_types";
 
 export type ParsedQuery = Record<string, string | string[]>;
 const AMPERSAND_CHAR_CODE = 38;

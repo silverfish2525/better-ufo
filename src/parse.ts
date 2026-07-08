@@ -1,6 +1,6 @@
 import type { ParseFilename, ParsePath as ParsePathType, ParseURL, Refine } from "./_types";
-import { decode } from "./encoding";
 import { hasProtocol, isScriptProtocol, isSpecialScheme } from "./utils/protocol";
+import { decode } from "./encoding";
 
 const protocolRelative = Symbol.for("ufo:protocolRelative");
 

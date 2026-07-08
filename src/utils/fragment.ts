@@ -1,6 +1,5 @@
 import type { Refine, WithFragment, WithoutFragment } from "../_types";
 import { encodeHash } from "../encoding";
-// oxlint-disable-next-line import/no-cycle -- structural cycle via _modify→parse→utils barrel
 import { modifyParsedURL } from "./_modify";
 
 /**

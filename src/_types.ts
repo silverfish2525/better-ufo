@@ -15,6 +15,18 @@
  * curated public helper types are re-exported from `index.ts`.
  */
 
+export type QueryValue =
+  | string
+  | number
+  | undefined
+  | null
+  | boolean
+  | QueryValue[]
+  // oxlint-disable-next-line typescript/no-explicit-any -- `unknown` breaks literal-preserving key ordering in type-level tests
+  | Record<string, any>;
+
+export type QueryObject = Record<string, QueryValue | QueryValue[]>;
+
 /**
  * `true` when `S` is a concrete string literal (or a union of them), `false`
  * for the wide `string` type. This is the switch that keeps every refinement

@@ -1,6 +1,6 @@
+import { withLeadingSlash, withTrailingSlash, withoutTrailingSlash } from "./slash";
 import type { IsRelative } from "../_types";
 import { decode } from "../encoding";
-import { withLeadingSlash, withTrailingSlash, withoutTrailingSlash } from "./slash";
 
 /**
  * Check if a path starts with `./` or `../`.

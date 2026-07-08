@@ -1,4 +1,3 @@
-import { describe, expect, it } from "vite-plus/test";
 import {
   decode,
   decodePath,
@@ -12,6 +11,7 @@ import {
   encodeQueryKey,
   encodeQueryValue,
 } from "../src/";
+import { describe, expect, it } from "vite-plus/test";
 
 describe("encode", () => {
   const tests = [

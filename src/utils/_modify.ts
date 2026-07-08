@@ -1,7 +1,5 @@
-// oxlint-disable-next-line import/no-cycle -- structural cycle via parse→utils barrel; value imports required
 import type { ParsedURL } from "../parse";
 import type { JoinURLOptions } from "./protocol";
-// oxlint-disable-next-line import/no-cycle -- structural cycle via parse→utils barrel; value imports required
 import { parseURL, stringifyParsedURL } from "../parse";
 import { hasProtocol } from "./protocol";
 

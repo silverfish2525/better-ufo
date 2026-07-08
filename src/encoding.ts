@@ -1,4 +1,4 @@
-import type { QueryValue } from "./query";
+import type { QueryValue } from "./_types";
 import { toASCII } from "./punycode";
 
 const SLASH_RE = /\//gu;

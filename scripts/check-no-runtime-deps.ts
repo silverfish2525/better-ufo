@@ -1,5 +1,5 @@
-import process from "node:process";
 import pkg from "../package.json" with { type: "json" };
+import process from "node:process";
 
 const pkgRecord = pkg as Record<string, unknown>;
 const rawDeps = pkgRecord["dependencies"];

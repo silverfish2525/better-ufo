@@ -1,10 +1,7 @@
 import type { CleanDoubleSlashes, NormalizeURL, Refine, ResolveURL } from "../_types";
 import { decode, decodePath, encodeHash, encodeHost, encodePath } from "../encoding";
-// oxlint-disable-next-line import/no-cycle -- structural cycle via parse→utils barrel
 import { parseURL, stringifyParsedURL } from "../parse";
-// oxlint-disable-next-line import/no-cycle -- structural cycle via query→utils barrel
 import { parseQuery, stringifyQuery } from "../query";
-// oxlint-disable-next-line import/no-cycle -- structural cycle via _modify→parse→utils barrel
 import { modifyParsedURL } from "./_modify";
 import { isNonEmptyURL } from "./predicates";
 import { withTrailingSlash, withoutLeadingSlash } from "./slash";

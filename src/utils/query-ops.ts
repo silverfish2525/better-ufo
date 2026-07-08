@@ -1,9 +1,7 @@
 import type { Refine, WithQueryResult, WithoutQuery } from "../_types";
 import type { ParsedQuery, QueryObject } from "../query";
-// oxlint-disable-next-line import/no-cycle -- structural cycle via parse→utils barrel
 import { parseURL } from "../parse";
 import { parseQuery, stringifyQuery } from "../query";
-// oxlint-disable-next-line import/no-cycle -- structural cycle via _modify→parse→utils barrel
 import { modifyParsedURL } from "./_modify";
 
 /**

@@ -138,29 +138,6 @@ export default defineConfig({
     ignorePatterns: ["src/punycode.ts"],
     rules: {
       "no-control-regex": "off",
-      "no-underscore-dangle": "off",
-      "typescript/no-explicit-any": "error",
-      "typescript/no-non-null-assertion": "error",
-      "typescript/consistent-type-imports": [
-        "error",
-        {
-          prefer: "type-imports",
-          fixStyle: "separate-type-imports",
-        },
-      ],
-      "typescript/no-import-type-side-effects": "error",
-      "unicorn/prefer-node-protocol": "error",
-      "unicorn/error-message": "error",
-      "unicorn/prefer-module": "error",
-      "unicorn/prefer-export-from": "error",
-      "unicorn/prefer-top-level-await": "error",
-      "import/first": "error",
-      "import/no-duplicates": "error",
-      "no-console": ["error", { allow: ["warn", "error"] }],
-      "prefer-const": "error",
-      "no-var": "error",
-      eqeqeq: ["error", "smart"],
-
       // ---------------------------------------------------------------
       // Rules disabled after enabling all oxlint categories.
       // Every entry below is a deliberate exemption; nothing here masks
@@ -172,6 +149,7 @@ export default defineConfig({
       "import/no-named-export": "off",
       "import/group-exports": "off",
       "import/exports-last": "off",
+      "eslint/no-duplicate-imports": "off", // doesn't understand `import type` vs `import` separation
       "import/no-relative-parent-imports": "off",
 
 

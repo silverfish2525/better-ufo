@@ -121,6 +121,10 @@ export default defineConfig({
       correctness: "error",
       suspicious: "error",
       perf: "error",
+      style: "error",
+      pedantic: "error",
+      restriction: "error",
+      nursery: "error",
     },
     options: {
       typeAware: true,

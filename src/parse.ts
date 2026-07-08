@@ -70,6 +70,25 @@ export function parsePath(input = ""): ParsedPath {
   };
 }
 
+function splitAuthorityAndPath(authorityAndPath: string): { auth: string; hostAndPath: string } {
+  const termIdx = authorityAndPath.search(/[/?#]/u);
+  const authoritySlice = termIdx === -1 ? authorityAndPath : authorityAndPath.slice(0, termIdx);
+  const pathSlice = termIdx === -1 ? "" : authorityAndPath.slice(termIdx);
+  const lastAtInAuthority = authoritySlice.lastIndexOf("@");
+
+  if (lastAtInAuthority === -1) {
+    return {
+      auth: "",
+      hostAndPath: authorityAndPath,
+    };
+  }
+
+  return {
+    auth: authoritySlice.slice(0, lastAtInAuthority).replaceAll("@", "%40"),
+    hostAndPath: authoritySlice.slice(lastAtInAuthority + 1) + pathSlice,
+  };
+}
+
 export function parseURL<const S extends string>(input: S): Refine<S, ParseURL<S>, ParsedURL>;
 /**
  * Takes a URL string and returns an object with the URL's `protocol`, `auth`, `host`, `pathname`, `search`, and `hash`.
@@ -149,22 +168,7 @@ export function parseURL(input = "", defaultProto?: string): ParsedURL {
   const protocol = grp(authorityMatch?.groups, "proto");
   const authorityAndPath = grp(authorityMatch?.groups, "afterAuthority");
 
-  const termIdx = authorityAndPath.search(/[/?#]/u);
-  const authoritySlice = termIdx === -1 ? authorityAndPath : authorityAndPath.slice(0, termIdx);
-  const pathSlice = termIdx === -1 ? "" : authorityAndPath.slice(termIdx);
-  const lastAtInAuthority = authoritySlice.lastIndexOf("@");
-
-  let auth = "";
-  // oxlint-disable-next-line eslint/no-useless-assignment -- default preserved for the if-branch, else-branch overwrites; matches upstream unjs/ufo
-  let hostAndPath = "";
-  if (lastAtInAuthority === -1) {
-    hostAndPath = authorityAndPath;
-  } else {
-    const rawUserinfo = authoritySlice.slice(0, lastAtInAuthority);
-    auth = rawUserinfo.replaceAll("@", "%40");
-    hostAndPath = authoritySlice.slice(lastAtInAuthority + 1) + pathSlice;
-  }
-
+  const { auth, hostAndPath } = splitAuthorityAndPath(authorityAndPath);
   const hostPathMatch = /(?<hostPart>[^#/?]*)(?<pathPart>.*)/su.exec(hostAndPath);
   const host = grp(hostPathMatch?.groups, "hostPart");
   let path = grp(hostPathMatch?.groups, "pathPart");

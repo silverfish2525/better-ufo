@@ -173,7 +173,7 @@ export default defineConfig({
       "import/group-exports": "off",
       "import/exports-last": "off",
       "import/no-relative-parent-imports": "off",
-      "import/no-duplicate-imports": "off", // duplicates typescript/no-duplicate-imports
+
 
       // Restriction: opinionated style rules that fight readable code.
       "eslint/id-length": "off", // t, c, s, i, k are fine in tight scopes
@@ -194,6 +194,14 @@ export default defineConfig({
 
       // Unicorn: null is a legitimate WHATWG-URL value (host/port/etc.).
       "unicorn/no-null": "off",
+
+      // TypeScript restriction rules that don't match this codebase.
+      // no-deprecated: hits our own `$URL` back-compat class re-exports.
+      "typescript/no-deprecated": "off",
+      // prefer-readonly-parameter-types: forcing Readonly<> on every public
+      // API parameter would rewrite the entire type surface; the parser never
+      // mutates inputs, so this is noise for a value-in / value-out library.
+      "typescript/prefer-readonly-parameter-types": "off",
 
       // Vitest restriction rules that don't match this suite's conventions.
       "vitest/prefer-expect-assertions": "off",

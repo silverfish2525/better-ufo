@@ -465,6 +465,10 @@ describe("withoutHost", () => {
       out: "/?",
     },
     {
+      input: "#foo",
+      out: "/#foo",
+    },
+    {
       input: "https://example.com/test?foo=123#hash",
       out: "/test?foo=123#hash",
     },

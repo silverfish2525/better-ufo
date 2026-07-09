@@ -286,3 +286,56 @@ describe("$URL — edge case constructors", () => {
     expect(url.href).toBe("https://example.com");
   });
 });
+
+describe("$URL — branch coverage", () => {
+  it("password getter returns '' when auth has no colon (username-only)", () => {
+    // Regression: exercises the `|| ""` fallback in the password getter when
+    // ParseAuth() surfaces an empty password (no ':' in `auth`).
+    const url = new $URL("http://user@example.com/path");
+    expect(url.auth).toBe("user");
+    expect(url.username).toBe("user");
+    expect(url.password).toBe("");
+    expect(url.encodedAuth).toBe("user");
+    expect(url.href).toBe("http://user@example.com/path");
+  });
+
+  it("origin is host-only when protocol is empty", () => {
+    // Path-only input has no protocol; origin must NOT prepend "//".
+    const url = new $URL("/only/path");
+    expect(url.protocol).toBe("");
+    expect(url.origin).toBe("");
+    const url2 = new $URL("");
+    url2.host = "example.com";
+    expect(url2.origin).toBe("example.com");
+  });
+
+  it("searchParams JSON-serializes non-string, non-array nullish scalars as 'null'", () => {
+    // Covers the `?? null` fallback in the else-branch of searchParams
+    // (value is not an array; typeof value !== 'string'; value is null/undefined).
+    const url = new $URL("/x");
+    url.query = { a: null, b: undefined };
+    expect(url.searchParams.get("a")).toBe("null");
+    expect(url.searchParams.get("b")).toBe("null");
+    expect(url.searchParams.toString()).toBe("a=null&b=null");
+  });
+
+  it("append is a no-op on pathname when the appended URL has no pathname", () => {
+    // Covers the false branch of `if (url.pathname)` inside append().
+    const base = new $URL("/base");
+    const overlay = new $URL("?q=1");
+    expect(overlay.pathname).toBe("");
+    base.append(overlay);
+    expect(base.pathname).toBe("/base");
+    expect(base.href).toBe("/base?q=1");
+  });
+
+  it("append is a no-op on hash when the appended URL has no hash", () => {
+    // Covers the false branch of `if (url.hash) { … }` inside append().
+    const base = new $URL("/base#keep");
+    const overlay = new $URL("/extra");
+    expect(overlay.hash).toBe("");
+    base.append(overlay);
+    expect(base.hash).toBe("#keep");
+    expect(base.href).toBe("/base/extra#keep");
+  });
+});

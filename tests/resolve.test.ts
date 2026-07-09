@@ -33,3 +33,23 @@ describe("resolveURL", () => {
     expect(resolveURL()).toBe("");
   });
 });
+
+describe("resolveURL — branch coverage", () => {
+  it("appends search-only segment (no pathname) without extending path", () => {
+    // Covers the false branch of `if (urlSegment.pathname)` in resolveURL —
+    // The segment has only a search component.
+    expect(resolveURL("/a", "?q=1")).toBe("/a?q=1");
+  });
+
+  it("appends hash-only segment (no pathname) without extending path", () => {
+    // Covers the same false branch with a hash-only segment.
+    expect(resolveURL("/a", "#hash")).toBe("/a#hash");
+  });
+
+  it("empties the merged query when both sides stringify to nothing", () => {
+    // Covers the false branch of `queryString.length > 0 ? '?…' : ''`.
+    // `__proto__` is filtered out by parseQuery's prototype-pollution guard,
+    // So both parsed inputs are empty objects and the merged result is "".
+    expect(resolveURL("/a?__proto__=1", "b?__proto__=2")).toBe("/a/b");
+  });
+});

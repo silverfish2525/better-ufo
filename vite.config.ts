@@ -190,6 +190,7 @@ export default defineConfig({
         statements: 95,
       },
     },
+    sequence: { shuffle: true },
     typecheck: { enabled: true },
   },
 });

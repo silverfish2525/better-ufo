@@ -60,7 +60,9 @@ export function withFragment(input: string, hash: string): string {
   ) {
     return `${preHash}#${encodeHash(hash)}`;
   }
+  // Line 51 already returned when `hash === "" || hash === "#"`, so here
+  // `hash` is guaranteed non-empty; no ternary needed.
   return modifyParsedURL(input, (parsed) => {
-    parsed.hash = hash === "" ? "" : `#${encodeHash(hash)}`;
+    parsed.hash = `#${encodeHash(hash)}`;
   });
 }

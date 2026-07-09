@@ -56,7 +56,7 @@
     "cache:clean": "vp cache clean",
     "prepack": "automd && vp pack",
     "prepare": "vp config --no-agent",
-    "release": "vp run test && vp run build && changelogen --release && npm publish && git push --follow-tags"
+    "release": "vp run test && vp run build && changelogen --release --push"
   },
   "devDependencies": {
     "@arethetypeswrong/core": "catalog:",

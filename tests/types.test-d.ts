@@ -56,8 +56,8 @@ describe("query", () => {
   });
 
   it("stringifyQuery computes the exact query string for single-part inputs", () => {
-    // Null value -> key only
-    expectTypeOf(stringifyQuery({ foo: null })).toEqualTypeOf<"foo">();
+    // Null value -> `key=` (runtime emits `foo=` for null and empty)
+    expectTypeOf(stringifyQuery({ foo: null })).toEqualTypeOf<"foo=">();
     // Undefined value -> dropped, single emitted part stays precise
     expectTypeOf(stringifyQuery({ foo: "bar", skip: undefined })).toEqualTypeOf<"foo=bar">();
     // 2+ emitted parts degrade to `string` — `keyof T` iteration order is not stable

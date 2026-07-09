@@ -230,9 +230,9 @@ export type StringifyQueryItem<K extends string, V> =
   IsUrlSafe<K> extends false
     ? string
     : V extends null
-      ? K
+      ? `${K}=`
       : V extends ""
-        ? K
+        ? `${K}=`
         : V extends string
           ? IsUrlSafe<V> extends true
             ? `${K}=${V}`

@@ -52,7 +52,6 @@ function appendQueryParameter(object: ParsedQuery, rawKey: string, rawValue: str
 export function parseQuery<T extends ParsedQuery = ParsedQuery>(parametersString?: string): T;
 export function parseQuery(parametersString?: string): ParsedQuery;
 export function parseQuery(parametersString = ""): ParsedQuery {
-  // V2: Use EmptyObject() for better perf (see unjs/ufo#290).
   // oxlint-disable-next-line typescript/no-unsafe-type-assertion -- Object.create(null) returns any; intentional for prototype-pollution safety
   const object = Object.create(null) as ParsedQuery;
   let keyStart = -1;

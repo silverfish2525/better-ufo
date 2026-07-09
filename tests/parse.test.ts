@@ -679,10 +679,7 @@ describe("parseHost — IPv6", () => {
     });
   });
 
-  it("keeps IPv6 zone-id inside the hostname verbatim (see TODO(v2))", () => {
-    // Zone-id normalization is deferred (see TODO(v2) comment in src/parse.ts).
-    // For now assert current behavior so the deferral is explicit and any change
-    // To zone-id handling has to update this test.
+  it("decodes percent-encoded IPv6 zone ID in the parsed host", () => {
     // Note: decode() percent-decodes the hostname, so %25 -> % in the returned value.
     expect(parseHost("[fe80::1%25eth0]:80")).toStrictEqual({
       hostname: "[fe80::1%eth0]",
@@ -717,6 +714,13 @@ describe("parseHost — CORR-23 anchor", () => {
       hostname: "foo.com:",
       port: undefined,
     });
+  });
+});
+
+describe("parseURL — protocol-relative round-trip", () => {
+  it("stringifyParsedURL preserves the leading // authority marker", () => {
+    const input = "//cdn.example.com/a?x=1#h";
+    expect(stringifyParsedURL(parseURL(input))).toBe(input);
   });
 });
 

@@ -80,7 +80,6 @@ describe("withBase — fragment characterization", () => {
   });
 
   it("does not double-prefix the base when a fragment is present", () => {
-    // CORR-02 regression guard. See advisor-plans/006-*.
     expect(withBase("/foo#h", "/foo")).toBe("/foo#h");
   });
 });
@@ -92,7 +91,6 @@ describe("withoutBase — fragment characterization", () => {
   });
 
   it("strips base from a path with a fragment", () => {
-    // CORR-04 regression guard. See advisor-plans/006-*.
     expect(withoutBase("/foo#h", "/foo")).toBe("/#h");
   });
 });

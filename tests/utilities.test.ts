@@ -4,6 +4,7 @@ import {
   isEqual,
   isRelative,
   isScriptProtocol,
+  isSpecialScheme,
   parsePath,
   parseURL,
   stringifyParsedURL,
@@ -126,6 +127,25 @@ describe("isScriptProtocol", () => {
   ];
   it.each(tests)("$input", (t) => {
     expect(isScriptProtocol(t.input)).toBe(t.out);
+  });
+
+  it("returns false for missing or empty protocol", () => {
+    expect(isScriptProtocol()).toBe(false);
+    expect(isScriptProtocol("")).toBe(false);
+  });
+});
+
+describe("isSpecialScheme", () => {
+  it.each([
+    { input: "http", out: true },
+    { input: "https:", out: true },
+    { input: "file:", out: true },
+    { input: "mailto:", out: false },
+    { input: "javascript:", out: false },
+    { input: "", out: false },
+    { input: undefined, out: false },
+  ])("$input", ({ input, out }) => {
+    expect(isSpecialScheme(input)).toBe(out);
   });
 });
 
@@ -386,6 +406,11 @@ describe("withFragment", () => {
     expect(withFragment(input, "")).toBe(input);
     expect(withFragment(input, "#")).toBe(input);
   });
+  it("slow-path: normalizes special-scheme backslashes before replacing hash", () => {
+    expect(withFragment(String.raw`HTTP://example.com/a\b#old`, "new hash")).toBe(
+      "http://example.com/a/b#new%20hash",
+    );
+  });
 });
 
 describe("withoutFragment", () => {
@@ -517,6 +542,9 @@ describe("withPort (plan 021)", () => {
   it("rejects empty string port", () => {
     expect(() => withPort("http://a.com/", "")).toThrow(TypeError);
   });
+  it("no-op on opaque schemes with no authority slot", () => {
+    expect(withPort("mailto:user@example.com", 8080)).toBe("mailto:user@example.com");
+  });
 });
 
 describe("withoutPort (plan 021)", () => {
@@ -535,6 +563,9 @@ describe("withoutPort (plan 021)", () => {
   it("idempotent", () => {
     const once = withoutPort("http://a.com:80/x");
     expect(withoutPort(once)).toBe(once);
+  });
+  it("no-op on opaque schemes with no host", () => {
+    expect(withoutPort("mailto:user@example.com")).toBe("mailto:user@example.com");
   });
 });
 
@@ -635,5 +666,24 @@ describe("withPathParameters (issue #243)", () => {
     // No __proto__ own key on the params object → fall through onMissing.
     expect(withPathParameters("/x/{__proto__}", {})).toBe("/x/{__proto__}");
     expect(withPathParameters("/x/{constructor}", {})).toBe("/x/{constructor}");
+  });
+
+  it("resets a reused global interpolate regex before substitution", () => {
+    const interpolate = /\{(?<name>[\s\S]+?)\}/gu;
+    interpolate.lastIndex = 999;
+    expect(withPathParameters("/x/{v}/{w}", { v: "a/b", w: "c d" }, { interpolate })).toBe(
+      "/x/a%2Fb/c%20d",
+    );
+    expect(interpolate.lastIndex).toBe(0);
+  });
+
+  it("custom interpolate without a capture leaves the matched text untouched", () => {
+    expect(withPathParameters("/x/{v}", { v: "y" }, { interpolate: /\{v\}/gu })).toBe("/x/{v}");
+  });
+
+  it("own undefined values leave placeholders unchanged instead of stringifying undefined", () => {
+    const parameters: Record<string, string | number> = {};
+    Object.defineProperty(parameters, "v", { enumerable: true, value: undefined });
+    expect(withPathParameters("/x/{v}", parameters)).toBe("/x/{v}");
   });
 });

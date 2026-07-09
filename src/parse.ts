@@ -200,7 +200,6 @@ export function parseURL(input = "", defaultProto?: string): ParsedURL {
  * @returns An object with two properties: username and password.
  */
 export function parseAuth(input = ""): ParsedAuth {
-  // V2: percent-encode userinfo per RFC 3986 §3.2.1 (mirrored on serialization side).
   const firstColon = input.indexOf(":");
   if (firstColon === -1) {
     return {
@@ -237,7 +236,6 @@ export function parseAuth(input = ""): ParsedAuth {
  * @returns An object with `hostname` and `port` (the port is undefined when absent).
  */
 export function parseHost(input = ""): ParsedHost {
-  // V2: IPv6 zone-id normalization (e.g. "[fe80::1%25eth0]").
   if (input.startsWith("[")) {
     const end = input.indexOf("]");
     if (end === -1) {

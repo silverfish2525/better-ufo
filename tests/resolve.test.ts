@@ -12,6 +12,9 @@ describe("resolveURL", () => {
     { input: ["/a?foo=bar#123", "b/", "c/"], out: "/a/b/c/?foo=bar#123" },
     { input: ["http://foo.com", "a"], out: "http://foo.com/a" },
     { input: ["a?x=1", "b?y=2&y=3&z=4"], out: "a/b?x=1&y=2&y=3&z=4" },
+    { input: ["/a", "b?x=1"], out: "/a/b?x=1" },
+    { input: ["/a#old", "b#new"], out: "/a/b#new" },
+    { input: ["/a#old", "b#"], out: "/a/b#old" },
   ])("$input -> $out", (t) => {
     expect(resolveURL(...t.input)).toBe(t.out);
   });

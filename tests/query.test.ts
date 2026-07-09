@@ -8,6 +8,7 @@ import {
   stringifyQuery,
   withQuery,
 } from "../src";
+import type { QueryObject } from "../src";
 
 describe("withQuery", () => {
   const tests = [
@@ -187,6 +188,13 @@ describe("stringifyQuery", () => {
   it("emits repeated keys for array values", () => {
     expect(stringifyQuery({ a: [1, 2] })).toBe("a=1&a=2");
   });
+
+  it("ignores inherited query keys", () => {
+    const proto: Record<string, string> = { inherited: "bad" };
+    const query: QueryObject = { own: "ok" };
+    Object.setPrototypeOf(query, proto);
+    expect(stringifyQuery(query)).toBe("own=ok");
+  });
 });
 
 describe("encodeQueryItem", () => {
@@ -200,6 +208,11 @@ describe("encodeQueryItem", () => {
 
   it("emits 'key=' for null", () => {
     expect(encodeQueryItem("k", null)).toBe("k=");
+  });
+
+  it("drops undefined scalar values", () => {
+    const args: [string, undefined] = ["k", undefined];
+    expect(encodeQueryItem(...args)).toBe("");
   });
 });
 

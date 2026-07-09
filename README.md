@@ -354,8 +354,6 @@ withHost("/only/path", "example.com");
 
 Strips the userinfo (`user:pass@`) prefix from an absolute URL's authority. No-op on relative inputs or URLs without userinfo.
 
-Note: setting userinfo is intentionally not provided here. Userinfo is a security-sensitive slot, and correct percent-encoding on serialisation is a v2 change (see `TODO(v2)` in `parseAuth`). A safe `withAuth` will land once that fix is in.
-
 **Example:**
 
 ```js

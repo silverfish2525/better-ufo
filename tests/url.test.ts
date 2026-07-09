@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vite-plus/test";
 import { $URL, createURL } from "../src";
+import type { QueryObject } from "../src";
 
 describe("$URL", () => {
   it("getters", () => {
@@ -35,6 +36,20 @@ describe("$URL", () => {
       search: "?query=value&v=1&v=2",
       username: "john",
     });
+  });
+
+  it("searchParams ignores inherited keys and serializes nullish/object array values", () => {
+    const url = new $URL("/x");
+    const proto: Record<string, string> = { inherited: "bad" };
+    const query: QueryObject = {
+      item: [undefined, null, { a: 1 }],
+      scalar: { b: 2 },
+    };
+    Object.setPrototypeOf(query, proto);
+    url.query = query;
+    expect(url.searchParams.toString()).toBe(
+      "item=&item=&item=%7B%22a%22%3A1%7D&scalar=%7B%22b%22%3A2%7D",
+    );
   });
 
   it("append", () => {

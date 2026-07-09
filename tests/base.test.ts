@@ -74,7 +74,6 @@ describe("withoutBase", () => {
 
 describe("withBase — fragment characterization", () => {
   it("keeps query-string handling intact (control)", () => {
-    // Control — proves the "already has base" check works for the ?query case.
     // Plan 006 must NOT regress this while fixing the # case.
     expect(withBase("/foo?q=1", "/foo")).toBe("/foo?q=1");
   });
@@ -86,7 +85,6 @@ describe("withBase — fragment characterization", () => {
 
 describe("withoutBase — fragment characterization", () => {
   it("strips base from a path with a query string (control)", () => {
-    // Control — plan 006 must NOT regress this while fixing the # case.
     expect(withoutBase("/foo?q=1", "/foo")).toBe("/?q=1");
   });
 

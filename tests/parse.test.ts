@@ -438,7 +438,6 @@ describe("parseURL", () => {
       });
     });
 
-    // Regression control: hierarchical URLs still parse the same way (host branch, not opaque).
     it("regression: http://foo still hits the hierarchical branch (host = 'foo')", () => {
       expect(parseURL("http://foo")).toMatchObject({
         auth: "",
@@ -448,7 +447,6 @@ describe("parseURL", () => {
       });
     });
 
-    // Regression control: `_specialProtoMatch` schemes still use their own branch (with .href).
     it("regression: data: still uses the special branch and includes .href", () => {
       const r = parseURL("data:text/plain,x");
       expect(r.protocol).toBe("data:");

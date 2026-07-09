@@ -286,7 +286,6 @@ describe("filterQuery + withQuery — chained", () => {
 
 describe("filterQuery — array-value predicate (characterization)", () => {
   it('filterQuery(?a=1&a=2, (k,v) => v !== "1") — pin current behavior', () => {
-    // Probe on 6f7a318: filterQuery("?a=1&a=2", (k,v) => v !== "1") → "?a=1&a=2".
     // Known-issue: value channel for repeated keys is `string[]`; the predicate receives ["1","2"],
     // So `v !== "1"` compares array to string — always true → filter keeps both entries.
     // See plan 009 CORR-05 for the related bug. Pinning current behavior for characterization;
@@ -307,7 +306,6 @@ describe("withQuery — noop and idempotence", () => {
   });
 
   it('withQuery("/x?a=1", { a: "1" }) — same-value reassign pins current output', () => {
-    // Probe on 6f7a318: withQuery("/x?a=1", { a: "1" }) → "/x?a=1"
     expect(withQuery("/x?a=1", { a: "1" })).toBe("/x?a=1");
   });
 });

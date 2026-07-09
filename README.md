@@ -6,12 +6,6 @@
 
 URL utilities for humans — a **security-hardened, WHATWG-conformant, type-refined fork of [`unjs/ufo`](https://github.com/unjs/ufo)**.
 
-> **Attribution:** `better-ufo` builds on the excellent [`ufo`](https://github.com/unjs/ufo)
-> package by [@pi0](https://github.com/pi0) and the unjs contributors. See
-> [CREDITS.md](./CREDITS.md) for the 17 upstream contributors whose PRs and
-> issues are incorporated, and the [LICENSE](./LICENSE) file for the MIT
-> copyright (preserved verbatim).
-
 ## What this fork adds
 
 - **Strictest possible TypeScript**: return types are inferred down to
@@ -43,7 +37,7 @@ URL utilities for humans — a **security-hardened, WHATWG-conformant, type-refi
   runs on any modern JavaScript runtime that supports [`URL`][mdn-url]
   (browsers, Deno, Bun, workers, edge), but we only test against Node.
 - Package manager: any (`npm`, `pnpm`, `yarn`, `bun`). Contributors use
-  [`pnpm@10`][pnpm-corepack] via corepack.
+  [`pnpm@11.10.0`][pnpm-corepack] via corepack.
 
 [mdn-url]: https://developer.mozilla.org/en-US/docs/Web/API/URL
 [pnpm-corepack]: https://pnpm.io/installation#using-corepack

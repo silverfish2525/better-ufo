@@ -68,7 +68,6 @@ const EXPECTED_FAILURES: ReadonlySet<string> = new Set<string>([
   "http:/example.com/",
   "ftp:/example.com/",
   "https:/example.com/",
-  // "file:/example.com/" — plan 007 fixed: opaque-scheme path now surfaced correctly
   "ws:/example.com/",
   "wss:/example.com/",
   // Scheme-relative (no slashes) — WPT resolves against base

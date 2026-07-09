@@ -40,7 +40,7 @@ export interface JoinURLOptions {
 
 export function hasProtocol(inputString: string, opts?: HasProtocolOptions): boolean;
 
-/** @deprecated Same as { hasProtocol(inputString, { acceptRelative: true }) */
+/** @deprecated Boolean shorthand for { acceptRelative: boolean }; prefer the options object overload. */
 export function hasProtocol(inputString: string, acceptRelative: boolean): boolean;
 
 /**

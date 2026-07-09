@@ -261,8 +261,19 @@ type JoinQueryParts<
   ? JoinQueryParts<Rest, Acc extends "" ? Head : `${Acc}&${Head}`>
   : Acc;
 
-/** The literal query string produced by `stringifyQuery(T)`. */
-type StringifyQuery<T> = JoinQueryParts<QueryParts<T>>;
+/**
+ * The literal query string produced by `stringifyQuery(T)`.
+ *
+ * Precise for 0 or 1 emitted parts. Degrades to `string` for 2+ parts:
+ * TypeScript does not expose stable object-declaration order via `keyof`,
+ * and typechecker frontends (tsc, Vitest's experimental typecheck runner)
+ * can disagree on the resulting tuple order. Rather than emit a literal
+ * that some checkers see as wrong, widen to `string` at 2+ parts.
+ */
+type StringifyQuery<T> =
+  QueryParts<T> extends readonly [string, string, ...unknown[]]
+    ? string
+    : JoinQueryParts<QueryParts<T>>;
 
 /** Public-facing result type: precise for object literals, `string` otherwise. */
 export type StringifyQueryResult<T> =

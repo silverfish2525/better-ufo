@@ -281,7 +281,6 @@ describe("$URL — edge case constructors", () => {
   });
 
   it("origin-only input (no path)", () => {
-    // Probe on 6f7a318: new $URL("https://example.com").pathname === ""
     const url = new $URL("https://example.com");
     expect(url.pathname).toBe("");
     expect(url.href).toBe("https://example.com");

@@ -486,7 +486,7 @@ describe("withoutHost", () => {
   });
 });
 
-describe("withHost (plan 021)", () => {
+describe("withHost", () => {
   it("replaces host on absolute URL", () => {
     expect(withHost("http://example.com/foo?x=1#h", "other.com")).toBe(
       "http://other.com/foo?x=1#h",
@@ -514,7 +514,7 @@ describe("withHost (plan 021)", () => {
   });
 });
 
-describe("withPort (plan 021)", () => {
+describe("withPort", () => {
   it("sets port when absent", () => {
     expect(withPort("http://example.com/x", 8080)).toBe("http://example.com:8080/x");
   });
@@ -547,7 +547,7 @@ describe("withPort (plan 021)", () => {
   });
 });
 
-describe("withoutPort (plan 021)", () => {
+describe("withoutPort", () => {
   it("strips port from absolute URL", () => {
     expect(withoutPort("http://example.com:8080/x")).toBe("http://example.com/x");
   });
@@ -569,7 +569,7 @@ describe("withoutPort (plan 021)", () => {
   });
 });
 
-describe("withoutAuth (plan 021)", () => {
+describe("withoutAuth", () => {
   it("strips user:pass@ userinfo", () => {
     expect(withoutAuth("http://user:pw@example.com/x")).toBe("http://example.com/x");
   });

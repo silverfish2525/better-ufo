@@ -55,12 +55,14 @@ describe("query", () => {
     expectTypeOf(result).toEqualTypeOf<{ foo: string }>();
   });
 
-  it("stringifyQuery computes the exact query string for object literals", () => {
-    expectTypeOf(stringifyQuery({ a: "323", b: "asdf" })).toEqualTypeOf<"a=323&b=asdf">();
+  it("stringifyQuery computes the exact query string for single-part inputs", () => {
     // Null value -> key only
     expectTypeOf(stringifyQuery({ foo: null })).toEqualTypeOf<"foo">();
-    // Undefined value -> dropped
+    // Undefined value -> dropped, single emitted part stays precise
     expectTypeOf(stringifyQuery({ foo: "bar", skip: undefined })).toEqualTypeOf<"foo=bar">();
+    // 2+ emitted parts degrade to `string` — `keyof T` iteration order is not stable
+    // Across TS typechecker frontends, so a precise literal is not reliably computable.
+    expectTypeOf(stringifyQuery({ a: "323", b: "asdf" })).toEqualTypeOf<string>();
   });
 
   it("stringifyQuery degrades to string for values needing encoding", () => {
@@ -77,18 +79,19 @@ describe("query", () => {
     expectTypeOf(encodeQueryItem("tags", ["a", "b"])).toEqualTypeOf<string>();
   });
 
-  it("withQuery computes the exact resulting URL for clean bases", () => {
-    expectTypeOf(withQuery("/foo", { a: "1", b: "2" })).toEqualTypeOf<"/foo?a=1&b=2">();
+  it("withQuery computes the exact resulting URL for single-part clean bases", () => {
+    // Existing query -> degrade to string (merge is not modelled)
+    expectTypeOf(withQuery("/foo?x=1", { a: "1" })).toEqualTypeOf<string>();
+    // Value needing encoding -> degrade
+    expectTypeOf(withQuery("/", { email: "some email.com" })).toEqualTypeOf<string>();
+    // 2+ emitted parts degrade — see stringifyQuery test above for rationale.
+    expectTypeOf(withQuery("/foo", { a: "1", b: "2" })).toEqualTypeOf<string>();
     expectTypeOf(
       withQuery("https://api.myanimelist.net/v2/user/@me/animelist/", {
         a: "323",
         b: "asdf",
       }),
-    ).toEqualTypeOf<"https://api.myanimelist.net/v2/user/@me/animelist/?a=323&b=asdf">();
-    // Existing query -> degrade to string (merge is not modelled)
-    expectTypeOf(withQuery("/foo?x=1", { a: "1" })).toEqualTypeOf<string>();
-    // Value needing encoding -> degrade
-    expectTypeOf(withQuery("/", { email: "some email.com" })).toEqualTypeOf<string>();
+    ).toEqualTypeOf<string>();
   });
 });
 

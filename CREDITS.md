@@ -37,7 +37,7 @@ Eleven overlapping community PRs proposed fixes to `encodeQueryValue`
 / `encodeQueryKey`. `better-ufo` converged them into a single
 spec-aligned implementation (encode set drawn from
 [WHATWG URL §5](https://url.spec.whatwg.org/#percent-encoded-bytes)).
-Cite: `src/encoding.ts` (top-of-file rationale block).
+Cite: `src/encoding.ts` (`RAW_QUERY_ENCODE_MAP` and query encode helpers).
 
 - **@JvanderHeide** — PR [#279](https://github.com/unjs/ufo/pull/279) (pipe)
 - **@yyz945947732** — PR [#288](https://github.com/unjs/ufo/pull/288) (semicolon)

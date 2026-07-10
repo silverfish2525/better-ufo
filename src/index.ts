@@ -1,5 +1,7 @@
 export type {
   CleanDoubleSlashes,
+  ExactPathParameters,
+  ExtractPathParameters,
   HasLeadingSlash,
   HasTrailingSlash,
   IsRelative,
@@ -12,6 +14,7 @@ export type {
   ParseFilename,
   ParsePath,
   ParseURL,
+  PathParametersFor,
   Refine,
   WithFragment,
   WithLeadingSlash,
@@ -19,6 +22,7 @@ export type {
   WithoutHost,
   WithoutLeadingSlash,
   WithoutTrailingSlash,
+  WithPathParametersResult,
   WithProtocol,
   WithTrailingSlash,
 } from "./_types";

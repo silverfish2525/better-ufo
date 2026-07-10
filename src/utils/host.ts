@@ -1,4 +1,11 @@
-import type { Refine, WithoutHost } from "../_types";
+import type {
+  Refine,
+  WithHostResult,
+  WithPortResult,
+  WithoutAuthResult,
+  WithoutHost,
+  WithoutPortResult,
+} from "../_types";
 import { parseURL, stringifyParsedURL } from "../parse";
 import { hasProtocol } from "./protocol";
 
@@ -69,6 +76,11 @@ function validatePort(port: string | number): string {
  * @returns The URL string with the host replaced.
  * @group utils
  */
+export function withHost<const Input extends string, const NewHost extends string>(
+  input: Input,
+  host: NewHost,
+): WithHostResult<Input, NewHost>;
+export function withHost(input: string, host: string): string;
 export function withHost(input: string, host: string): string {
   if (hasNoAuthoritySlot(input)) {
     return input;
@@ -95,6 +107,11 @@ export function withHost(input: string, host: string): string {
  * @returns The URL string with the port set.
  * @group utils
  */
+export function withPort<const Input extends string, const Port extends string | number>(
+  input: Input,
+  port: Port,
+): WithPortResult<Input, Port>;
+export function withPort(input: string, port: string | number): string;
 export function withPort(input: string, port: string | number): string {
   const portString = validatePort(port);
   if (hasNoAuthoritySlot(input)) {
@@ -125,6 +142,8 @@ export function withPort(input: string, port: string | number): string {
  * @returns The URL string with the port removed.
  * @group utils
  */
+export function withoutPort<const Input extends string>(input: Input): WithoutPortResult<Input>;
+export function withoutPort(input: string): string;
 export function withoutPort(input: string): string {
   if (hasNoAuthoritySlot(input)) {
     return input;
@@ -154,6 +173,8 @@ export function withoutPort(input: string): string {
  * @returns The URL string with userinfo stripped.
  * @group utils
  */
+export function withoutAuth<const Input extends string>(input: Input): WithoutAuthResult<Input>;
+export function withoutAuth(input: string): string;
 export function withoutAuth(input: string): string {
   if (hasNoAuthoritySlot(input)) {
     return input;

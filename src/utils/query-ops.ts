@@ -1,4 +1,10 @@
-import type { Refine, WithQueryResult, WithoutQuery } from "../_types";
+import type {
+  FilterQueryResult,
+  GetQueryResult,
+  Refine,
+  WithQueryResult,
+  WithoutQuery,
+} from "../_types";
 import type { ParsedQuery, QueryObject } from "../query";
 import { parseURL } from "../parse";
 import { parseQuery, stringifyQuery } from "../query";
@@ -46,6 +52,14 @@ export function withQuery(input: string, query: QueryObject): string {
  * @returns The URL with only the query entries passing the predicate.
  * @group utils
  */
+export function filterQuery<const S extends string>(
+  input: S,
+  predicate: (key: string, value: string | string[]) => boolean,
+): FilterQueryResult<S>;
+export function filterQuery(
+  input: string,
+  predicate: (key: string, value: string | string[]) => boolean,
+): string;
 export function filterQuery(
   input: string,
   predicate: (key: string, value: string | string[]) => boolean,
@@ -84,8 +98,12 @@ export function filterQuery(
  * @group utils
  */
 // oxlint-disable-next-line typescript/no-unnecessary-type-parameters -- public API: callers can specify return type
-export function getQuery<T extends ParsedQuery = ParsedQuery>(input: string): T {
-  return parseQuery<T>(parseURL(input).search);
+export function getQuery<const S extends string>(input: S): GetQueryResult<S>;
+// oxlint-disable-next-line typescript/no-unnecessary-type-parameters -- public API: callers can specify return type
+export function getQuery<T extends ParsedQuery = ParsedQuery>(input: string): T;
+export function getQuery(input: string): ParsedQuery;
+export function getQuery(input: string): ParsedQuery {
+  return parseQuery(parseURL(input).search);
 }
 
 export function withoutQuery<const S extends string>(input: S): Refine<S, WithoutQuery<S>>;

@@ -1,5 +1,11 @@
 import { withLeadingSlash, withTrailingSlash, withoutTrailingSlash } from "./slash";
-import type { IsRelative } from "../_types";
+import type {
+  IsEmptyURLResult,
+  IsEqualResult,
+  IsNonEmptyURLResult,
+  IsRelative,
+  IsSamePathResult,
+} from "../_types";
 import { decode } from "../encoding";
 
 /**
@@ -27,6 +33,8 @@ export function isRelative(inputString: string): boolean {
  * @returns `true` if the URL is empty or equals `"/"`.
  * @group utils
  */
+export function isEmptyURL<const S extends string>(url: S): IsEmptyURLResult<S>;
+export function isEmptyURL(url: string): boolean;
 export function isEmptyURL(url: string): boolean {
   return !url || url === "/";
 }
@@ -38,6 +46,8 @@ export function isEmptyURL(url: string): boolean {
  * @returns `true` if the URL is non-empty and not equals `"/"`.
  * @group utils
  */
+export function isNonEmptyURL<const S extends string>(url: S): IsNonEmptyURLResult<S>;
+export function isNonEmptyURL(url: string): boolean;
 export function isNonEmptyURL(url: string): boolean {
   return Boolean(url) && url !== "/";
 }
@@ -56,6 +66,11 @@ export function isNonEmptyURL(url: string): boolean {
  * @returns `true` if both paths are the same ignoring trailing slash.
  * @group utils
  */
+export function isSamePath<const A extends string, const B extends string>(
+  p1: A,
+  p2: B,
+): IsSamePathResult<A, B>;
+export function isSamePath(p1: string, p2: string): boolean;
 export function isSamePath(p1: string, p2: string): boolean {
   return decode(withoutTrailingSlash(p1)) === decode(withoutTrailingSlash(p2));
 }
@@ -92,6 +107,12 @@ interface CompareURLOptions {
  * @returns `true` if both URLs are considered equal under the given options.
  * @group utils
  */
+export function isEqual<
+  const A extends string,
+  const B extends string,
+  const Options extends CompareURLOptions | undefined = undefined,
+>(a: A, b: B, options?: Options): IsEqualResult<A, B, Options>;
+export function isEqual(a: string, b: string, options?: CompareURLOptions): boolean;
 export function isEqual(a: string, b: string, options: CompareURLOptions = {}): boolean {
   let lhs = a;
   let rhs = b;

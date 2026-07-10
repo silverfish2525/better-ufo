@@ -1,3 +1,4 @@
+import type { WithBaseResult, WithoutBaseResult } from "../_types";
 import type { JoinURLOptions } from "./protocol";
 import { hasProtocol } from "./protocol";
 import { normalizeProtocolRelative } from "./_modify";
@@ -39,6 +40,11 @@ function isAtBaseBoundary(input: string, baseLen: number): boolean {
  * @returns The URL with the base prepended (or unchanged if already present).
  * @group utils
  */
+export function withBase<const Input extends string, const Base extends string>(
+  input: Input,
+  base: Base,
+): WithBaseResult<Input, Base>;
+export function withBase(input: string, base: string, opts?: JoinURLOptions): string;
 export function withBase(input: string, base: string, opts?: JoinURLOptions): string {
   if (isEmptyURL(base) || hasProtocol(input)) {
     return normalizeProtocolRelative(input, base, opts);
@@ -68,6 +74,11 @@ export function withBase(input: string, base: string, opts?: JoinURLOptions): st
  * @returns The URL with the base removed (or unchanged if not present).
  * @group utils
  */
+export function withoutBase<const Input extends string, const Base extends string>(
+  input: Input,
+  base: Base,
+): WithoutBaseResult<Input, Base>;
+export function withoutBase(input: string, base: string): string;
 export function withoutBase(input: string, base: string): string {
   if (isEmptyURL(base)) {
     return input;

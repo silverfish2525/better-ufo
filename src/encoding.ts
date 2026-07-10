@@ -1,4 +1,15 @@
-import type { QueryValue } from "./_types";
+import type {
+  DecodePathResult,
+  DecodeQueryResult,
+  DecodeResult,
+  EncodeHashResult,
+  EncodeHostResult,
+  EncodeParamResult,
+  EncodePathResult,
+  EncodeQueryResult,
+  EncodeResult,
+  QueryValue,
+} from "./_types";
 import { toASCII } from "./punycode";
 
 const SLASH_RE = /\//gu;
@@ -53,6 +64,8 @@ function lookupCaseInsensitive(table: Readonly<Record<string, string>>, match: s
  * @param text - string to encode
  * @returns encoded string
  */
+export function encode<const S extends string>(text: S): EncodeResult<S>;
+export function encode(text: string | number): string;
 export function encode(text: string | number): string {
   return encodeURI(`${text}`).replace(ENC_PIPE_RE, "|");
 }
@@ -65,6 +78,8 @@ export function encode(text: string | number): string {
  * @param text - string to encode
  * @returns encoded string
  */
+export function encodeHash<const S extends string>(text: S): EncodeHashResult<S>;
+export function encodeHash(text: string): string;
 export function encodeHash(text: string): string {
   return encode(text).replace(ENC_HASH_RESTORE_RE, (m) =>
     lookupCaseInsensitive(ENC_HASH_RESTORE_MAP, m),
@@ -80,6 +95,8 @@ export function encodeHash(text: string): string {
  * @param input - string to encode
  * @returns encoded string
  */
+export function encodeQueryValue<const S extends string>(input: S): EncodeQueryResult<S>;
+export function encodeQueryValue(input: QueryValue): string;
 export function encodeQueryValue(input: QueryValue): string {
   return (
     encode(typeof input === "string" ? input : JSON.stringify(input))
@@ -99,6 +116,8 @@ export function encodeQueryValue(input: QueryValue): string {
  * @param text - string to encode
  * @returns The percent-encoded query key string.
  */
+export function encodeQueryKey<const S extends string>(text: S): EncodeQueryResult<S>;
+export function encodeQueryKey(text: string | number): string;
 export function encodeQueryKey(text: string | number): string {
   return encodeQueryValue(text);
 }
@@ -111,6 +130,8 @@ export function encodeQueryKey(text: string | number): string {
  * @param text - string to encode
  * @returns encoded string
  */
+export function encodePath<const S extends string>(text: S): EncodePathResult<S>;
+export function encodePath(text: string | number): string;
 export function encodePath(text: string | number): string {
   return encode(text)
     .replace(ENC_ENC_SLASH_RE, "%2F")
@@ -127,6 +148,8 @@ export function encodePath(text: string | number): string {
  * @param text - string to encode
  * @returns encoded string
  */
+export function encodeParam<const S extends string>(text: S): EncodeParamResult<S>;
+export function encodeParam(text: string | number): string;
 export function encodeParam(text: string | number): string {
   return encodePath(text).replace(SLASH_RE, "%2F");
 }
@@ -140,6 +163,9 @@ export function encodeParam(text: string | number): string {
  * @param text - string to decode
  * @returns decoded string
  */
+export function decode(): "";
+export function decode<const S extends string>(text: S): DecodeResult<S>;
+export function decode(text?: string | number): string;
 export function decode(text: string | number = ""): string {
   try {
     return decodeURIComponent(`${text}`);
@@ -156,6 +182,8 @@ export function decode(text: string | number = ""): string {
  * @param text - string to decode
  * @returns decoded string
  */
+export function decodePath<const S extends string>(text: S): DecodePathResult<S>;
+export function decodePath(text: string): string;
 export function decodePath(text: string): string {
   return decode(text.replace(ENC_SLASH_RE, "%252F"));
 }
@@ -168,6 +196,8 @@ export function decodePath(text: string): string {
  * @param text - string to decode
  * @returns decoded string
  */
+export function decodeQueryKey<const S extends string>(text: S): DecodeQueryResult<S>;
+export function decodeQueryKey(text: string): string;
 export function decodeQueryKey(text: string): string {
   return decode(text.replace(PLUS_RE, " "));
 }
@@ -180,6 +210,8 @@ export function decodeQueryKey(text: string): string {
  * @param text - string to decode
  * @returns decoded string
  */
+export function decodeQueryValue<const S extends string>(text: S): DecodeQueryResult<S>;
+export function decodeQueryValue(text: string): string;
 export function decodeQueryValue(text: string): string {
   return decode(text.replace(PLUS_RE, " "));
 }
@@ -203,6 +235,9 @@ function encodeHostStructural(c: string): string {
   return HOST_STRUCTURAL_ENCODE[c] ?? c;
 }
 
+export function encodeHost(): "";
+export function encodeHost<const S extends string>(name: S): EncodeHostResult<S>;
+export function encodeHost(name?: string): string;
 export function encodeHost(name = ""): string {
   return toASCII(name).replace(HOST_STRUCTURAL_RE, encodeHostStructural);
 }

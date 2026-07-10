@@ -653,13 +653,15 @@ describe("withPathParameters (issue #243)", () => {
     expect(withPathParameters("/x/{ v }", { v: "y" })).toBe("/x/y");
   });
   it("missing placeholder: default is `leave` (match kept verbatim)", () => {
-    expect(withPathParameters("/x/{missing}", {})).toBe("/x/{missing}");
+    const template = "/x/{missing}" as string;
+    expect(withPathParameters(template, {})).toBe("/x/{missing}");
   });
   it("missing placeholder: onMissing='empty' substitutes empty string", () => {
     expect(withPathParameters("/x/{a}/{b}", { a: "1" }, { onMissing: "empty" })).toBe("/x/1/");
   });
   it("missing placeholder: onMissing='throw' throws TypeError", () => {
-    expect(() => withPathParameters("/x/{missing}", {}, { onMissing: "throw" })).toThrow(TypeError);
+    const template = "/x/{missing}" as string;
+    expect(() => withPathParameters(template, {}, { onMissing: "throw" })).toThrow(TypeError);
   });
   it("rejects non-global interpolate regex", () => {
     expect(() =>
@@ -668,8 +670,10 @@ describe("withPathParameters (issue #243)", () => {
   });
   it("prototype pollution: __proto__ / constructor are not resolved from own props", () => {
     // No __proto__ own key on the params object → fall through onMissing.
-    expect(withPathParameters("/x/{__proto__}", {})).toBe("/x/{__proto__}");
-    expect(withPathParameters("/x/{constructor}", {})).toBe("/x/{constructor}");
+    const protoTemplate = "/x/{__proto__}" as string;
+    const ctorTemplate = "/x/{constructor}" as string;
+    expect(withPathParameters(protoTemplate, {})).toBe("/x/{__proto__}");
+    expect(withPathParameters(ctorTemplate, {})).toBe("/x/{constructor}");
   });
 
   it("resets a reused global interpolate regex before substitution", () => {
@@ -688,7 +692,8 @@ describe("withPathParameters (issue #243)", () => {
   it("own undefined values leave placeholders unchanged instead of stringifying undefined", () => {
     const parameters: Record<string, string | number> = {};
     Object.defineProperty(parameters, "v", { enumerable: true, value: undefined });
-    expect(withPathParameters("/x/{v}", parameters)).toBe("/x/{v}");
+    const template = "/x/{v}" as string;
+    expect(withPathParameters(template, parameters)).toBe("/x/{v}");
   });
 
   it("linear time on adversarial unclosed-brace input (regression: CodeQL js/polynomial-redos)", () => {

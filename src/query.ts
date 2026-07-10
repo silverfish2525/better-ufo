@@ -1,4 +1,10 @@
-import type { QueryObject, QueryValue, StringifyQueryItem, StringifyQueryResult } from "./_types";
+import type {
+  ParseQueryResult,
+  QueryObject,
+  QueryValue,
+  StringifyQueryItem,
+  StringifyQueryResult,
+} from "./_types";
 import { decodeQueryKey, decodeQueryValue, encodeQueryKey, encodeQueryValue } from "./encoding";
 
 export type { QueryObject, QueryValue } from "./_types";
@@ -48,6 +54,8 @@ function appendQueryParameter(object: ParsedQuery, rawKey: string, rawValue: str
  *
  * @group Query_utils
  */
+// oxlint-disable-next-line typescript/no-unnecessary-type-parameters -- public API: callers can specify return type
+export function parseQuery<const S extends string>(parametersString: S): ParseQueryResult<S>;
 // oxlint-disable-next-line typescript/no-unnecessary-type-parameters -- public API: callers can specify return type
 export function parseQuery<T extends ParsedQuery = ParsedQuery>(parametersString?: string): T;
 export function parseQuery(parametersString?: string): ParsedQuery;

@@ -276,12 +276,12 @@ describe("parseURL", () => {
   // Attack patterns tested as strings; no HTTP request is issued.
   describe("sEC-03: scheme validation (WHATWG/RFC 3986)", () => {
     // Attack patterns tested as strings; no HTTP request is issued.
-    it("rejects digit-leading schemes (no protocol captured)", () => {
+    it("rejects digit-leading schemes (protocol slot absent from the shape)", () => {
       const r = parseURL("123://foo.com/x");
-      // Falls through to parsePath: protocol is absent/empty.
-      expect(r.protocol).toBeUndefined();
       // Falls through to parsePath: pathname holds the raw string.
       expect(r.pathname + r.search + r.hash).toBe("123://foo.com/x");
+      // `protocol` is not present on the parsed shape at runtime either.
+      expect(Object.hasOwn(r, "protocol")).toBe(false);
     });
     it("accepts alpha-leading schemes with digits/plus/dot/minus", () => {
       expect(parseURL("h2c://x/y").protocol).toBe("h2c:");

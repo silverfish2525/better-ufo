@@ -1,4 +1,5 @@
 import { encodeParam } from "../encoding";
+import type { ExactPathParameters, PathParametersFor, WithPathParametersResult } from "../_types";
 
 /**
  * Options for {@link withPathParameters}.
@@ -21,7 +22,6 @@ export interface WithPathParametersOptions {
   onMissing?: "leave" | "throw" | "empty";
 }
 
-// Returns the substitution string, or `undefined` to signal "keep the original match".
 function resolveKey(
   key: string,
   parameters: Record<string, string | number>,
@@ -46,9 +46,6 @@ function resolveKey(
   }
 }
 
-// Linear scanner for the default `{name}` syntax (closes CodeQL js/polynomial-redos).
-// Preserves the semantics of the old `/\{(.+?)\}/gu` regex: `{}` is not a match, and
-// Nested `{`s inside a name are permitted up to the first `}`.
 function replaceDefault(
   template: string,
   parameters: Record<string, string | number>,
@@ -112,6 +109,34 @@ function replaceDefault(
  * @returns The URL string with all placeholders substituted.
  * @group utils
  */
+export function withPathParameters<
+  const Template extends string,
+  const Parameters extends PathParametersFor<Template>,
+>(
+  template: Template,
+  parameters: ExactPathParameters<Template, Parameters>,
+  options?: undefined,
+): WithPathParametersResult<Template, Parameters>;
+export function withPathParameters<
+  const Template extends string,
+  const Options extends WithPathParametersOptions,
+  const Parameters extends PathParametersFor<Template, Options>,
+>(
+  template: Template,
+  parameters: ExactPathParameters<Template, Parameters, Options>,
+  options: Options,
+): WithPathParametersResult<Template, Parameters, Options>;
+/**
+ * Fallback for explicit runtime-tolerant `onMissing` modes: when the caller
+ * opts in via `onMissing: "leave" | "empty"`, missing template keys are
+ * accepted at compile time and the result widens to `string`. Callers who
+ * omit options or set `onMissing: "throw"` still hit the strict overloads.
+ */
+export function withPathParameters(
+  template: string,
+  parameters: Record<string, string | number>,
+  options: WithPathParametersOptions & { onMissing: "empty" | "leave" },
+): string;
 export function withPathParameters(
   template: string,
   parameters: Record<string, string | number>,
@@ -127,7 +152,6 @@ export function withPathParameters(
         `(got ${interpolate.toString()}).`,
     );
   }
-  // Reset lastIndex defensively — the caller may have used the regex before.
   interpolate.lastIndex = 0;
   return template.replace(interpolate, (match, name: unknown) => {
     if (typeof name !== "string") {

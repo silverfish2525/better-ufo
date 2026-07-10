@@ -1,4 +1,12 @@
-import type { ParseFilename, ParsePath as ParsePathType, ParseURL, Refine } from "./_types";
+import type {
+  ParseAuthResult,
+  ParseFilename,
+  ParseHostResult,
+  ParsePath as ParsePathType,
+  ParseURL,
+  Refine,
+  StringifyParsedURLResult,
+} from "./_types";
 import { hasProtocol, isScriptProtocol, isSpecialScheme } from "./utils/protocol";
 import { decode } from "./encoding";
 
@@ -199,6 +207,9 @@ export function parseURL(input = "", defaultProto?: string): ParsedURL {
  * @param [input] - The URL to parse.
  * @returns An object with two properties: username and password.
  */
+export function parseAuth(): { password: ""; username: "" };
+export function parseAuth<const S extends string>(input: S): ParseAuthResult<S>;
+export function parseAuth(input?: string): ParsedAuth;
 export function parseAuth(input = ""): ParsedAuth {
   const firstColon = input.indexOf(":");
   if (firstColon === -1) {
@@ -235,6 +246,9 @@ export function parseAuth(input = ""): ParsedAuth {
  * @param [input] - The URL to parse.
  * @returns An object with `hostname` and `port` (the port is undefined when absent).
  */
+export function parseHost(): { hostname: ""; port: undefined };
+export function parseHost<const S extends string>(input: S): ParseHostResult<S>;
+export function parseHost(input?: string): ParsedHost;
 export function parseHost(input = ""): ParsedHost {
   if (input.startsWith("[")) {
     const end = input.indexOf("]");
@@ -282,6 +296,10 @@ export function parseHost(input = ""): ParsedHost {
  * @param [parsed] - The parsed URL
  * @returns A stringified URL.
  */
+export function stringifyParsedURL<const P extends Partial<ParsedURL>>(
+  parsed: P,
+): StringifyParsedURLResult<P>;
+export function stringifyParsedURL(parsed: Partial<ParsedURL>): string;
 export function stringifyParsedURL(parsed: Partial<ParsedURL>): string {
   const pathname = parsed.pathname ?? "";
   const rawSearch = parsed.search ?? "";

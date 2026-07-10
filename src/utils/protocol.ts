@@ -1,4 +1,10 @@
-import type { IsScriptProtocol, IsSpecialScheme, Refine, WithProtocol } from "../_types";
+import type {
+  HasProtocolResult,
+  IsScriptProtocol,
+  IsSpecialScheme,
+  Refine,
+  WithProtocol,
+} from "../_types";
 
 const PROTOCOL_STRICT_REGEX = /^[\s\0]*[A-Z][A-Z0-9+.-]+:[/\\]{1,2}/iu;
 const PROTOCOL_REGEX = /^[\s\0]*[A-Z][\s\w\0+.-]+:(?:[/\\]{2})?/iu;
@@ -38,8 +44,22 @@ export interface JoinURLOptions {
   allowProtocolRelative?: boolean;
 }
 
+export function hasProtocol<const S extends string>(
+  inputString: S,
+): HasProtocolResult<S, false, false>;
+export function hasProtocol<
+  const S extends string,
+  const AR extends boolean,
+  const Str extends boolean,
+>(
+  inputString: S,
+  opts: { acceptRelative?: AR; strict?: Str },
+): HasProtocolResult<S, boolean extends AR ? boolean : AR, boolean extends Str ? boolean : Str>;
+export function hasProtocol<const S extends string, const AR extends boolean>(
+  inputString: S,
+  acceptRelative: AR,
+): HasProtocolResult<S, boolean extends AR ? boolean : AR, false>;
 export function hasProtocol(inputString: string, opts?: HasProtocolOptions): boolean;
-
 /** @deprecated Boolean shorthand for { acceptRelative: boolean }; prefer the options object overload. */
 export function hasProtocol(inputString: string, acceptRelative: boolean): boolean;
 

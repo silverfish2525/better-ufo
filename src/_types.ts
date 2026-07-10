@@ -433,12 +433,22 @@ export type JoinURLResult<Base extends string, Rest extends readonly string[]> =
 
 /**
  * `true` when `S` contains a shape the type-level dot-segment fold does not
- * model (`//` runs or `://` protocol) — those go through a runtime regex/protocol
- * guard path we choose not to replicate here, so the whole result widens.
+ * model. Widens for:
+ *
+ * - `//` runs and `://` protocol shapes — the runtime split regex
+ *   (`/\/(?!\/)/u`) and protocol guard path are not modeled here.
+ * - Any part containing `:` — runtime `joinRelativeURL` has two
+ *   protocol-sentinel branches we choose not to replicate: (a) `..` is
+ *   SKIPPED when `segments.length === 1 && hasProtocol(segments[0])`, and
+ *   (b) `sindex === 1 && segments.at(-1)?.endsWith(":/")` triggers a
+ *   protocol-relative merge. Both hinge on runtime `hasProtocol`, which we
+ *   cannot cheaply detect at the type level. Widening on any `:` is a
+ *   deliberate over-approximation that keeps `joinRelativeURL("http:", "..")`
+ *   and similar cases sound.
  */
 type HasJoinRelativeUnmodeled<S extends string> = S extends
   | `${string}//${string}`
-  | `${string}://${string}`
+  | `${string}:${string}`
   ? true
   : false;
 
@@ -446,7 +456,7 @@ type AnyJoinRelativeUnmodeled<Parts extends readonly string[]> = Parts extends r
   infer H extends string,
   ...infer T extends readonly string[],
 ]
-  ? HasJoinRelativeUnmodeled<H> extends true
+  ? true extends HasJoinRelativeUnmodeled<H>
     ? true
     : AnyJoinRelativeUnmodeled<T>
   : false;
@@ -1062,24 +1072,6 @@ type NormalizeFilePathPrefix<P extends string> = P extends `/${infer Drive}:${in
     ? `${Drive}:${Rest}`
     : P
   : P;
-
-/**
- * Internal parsed-URL shape used by normalize/resolve. Includes the
- * `protocolRelative` marker for `//x.io/a`-style inputs; the public
- * {@link ParseURL} strips this marker via {@link PublicParseURL}. Exported
- * only so cross-file type helpers within `src/` can reference the shape;
- * not re-exported from the barrel.
- */
-export interface URLState {
-  protocol?: string;
-  host?: string;
-  auth?: string;
-  href?: string;
-  pathname: string;
-  search: string;
-  hash: string;
-  protocolRelative?: true;
-}
 
 /**
  * Strip the private `protocolRelative` marker from a parsed state so the
@@ -2089,6 +2081,18 @@ type CountDigits<S extends string, Count extends readonly unknown[] = []> = S ex
     : false;
 
 /**
+ * `true` when `S` is a non-empty pure sequence of ASCII digits. Used by
+ * `ParseHostResult` to reject numeric-template edge shapes such as
+ * `"1e2"`, `"1.5"`, or `"1_000"` that the runtime `parseHost` (which
+ * requires `/\d+/`) also rejects.
+ */
+type IsAllDigits<S extends string> = S extends ""
+  ? false
+  : CountDigits<S> extends false
+    ? false
+    : true;
+
+/**
  * Coarse type-level port validation. Runtime `validatePort` accepts only
  * an integer in `1..65535`; TypeScript can't cheaply express that range, so
  * we classify strictly-integer numeric literals by digit-length:
@@ -2384,7 +2388,7 @@ export type ParseHostResult<S extends string> =
         : S extends `[${infer V6}]`
           ? { hostname: `[${V6}]`; port: undefined }
           : S extends `${infer Host}:${infer P}`
-            ? P extends `${number}`
+            ? IsAllDigits<P> extends true
               ? { hostname: Host; port: P }
               : { hostname: S; port: undefined }
             : { hostname: S; port: undefined }
@@ -2450,6 +2454,25 @@ type HasBroadStringifyField<P> = true extends
   ? true
   : false;
 
+/**
+ * Rendering of an `{authority, no protocol}` shape. The runtime `parseURL`
+ * Sets a hidden `protocolRelative` symbol on `//x.io/a`-style inputs;
+ * `stringifyParsedURL` reads that symbol to emit a leading `//`. The public
+ * Type strips the marker (plan §4), so an empty protocol combined with a
+ * Non-empty host/auth is ambiguous at the type level and MUST widen to
+ * `string` rather than pretend `"x.io/a"` is exact.
+ */
+type StringifyProtocolRelativeOrAuthority<
+  AuthRaw extends string,
+  Host extends string,
+  Pathname extends string,
+  SearchRaw extends string,
+  Hash extends string,
+  Protocol extends string,
+> = Protocol extends ""
+  ? string
+  : `${Protocol}//${AuthRaw extends "" ? "" : `${AuthRaw}@`}${Host}${Pathname}${NormalizeSearch<SearchRaw>}${Hash}`;
+
 type StringifyParsedURLLiteral<
   P extends {
     protocol?: string;
@@ -2470,9 +2493,14 @@ type StringifyParsedURLLiteral<
                 ? Protocol extends ""
                   ? `${Pathname}${NormalizeSearch<SearchRaw>}${Hash}`
                   : `${Protocol}${Pathname}${NormalizeSearch<SearchRaw>}${Hash}`
-                : Protocol extends ""
-                  ? `${AuthRaw extends "" ? "" : `${AuthRaw}@`}${Host}${Pathname}${NormalizeSearch<SearchRaw>}${Hash}`
-                  : `${Protocol}//${AuthRaw extends "" ? "" : `${AuthRaw}@`}${Host}${Pathname}${NormalizeSearch<SearchRaw>}${Hash}`
+                : StringifyProtocolRelativeOrAuthority<
+                    AuthRaw,
+                    Host,
+                    Pathname,
+                    SearchRaw,
+                    Hash,
+                    Protocol
+                  >
               : string
             : string
           : string

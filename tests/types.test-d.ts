@@ -78,6 +78,9 @@ import type { StringifyParsedURLResult } from "../src/_types";
 declare const dyn: string;
 // A genuinely-wide number: parameter values must degrade to string here.
 declare const wideN: number;
+// A union literal used to prove union-distributive predicates handle
+// Any-member semantics correctly in joinRelativeURL widening.
+declare const maybeScheme: "a" | "http:";
 
 describe("query", () => {
   it("getQuery generic type support", () => {
@@ -360,6 +363,21 @@ describe("parse extras — refined", () => {
     // Proper subtype of `string`, not equal to it.
     expectTypeOf<StringifyParsedURLResult<Partial<ParsedURL>>>().toEqualTypeOf<string>();
   });
+  it("stringifyParsedURL widens when protocol is empty and authority is non-empty (hidden `protocolRelative` marker)", () => {
+    // Runtime `parseURL("//x.io/a")` sets a hidden `protocolRelative` symbol
+    // On the returned object; `stringifyParsedURL` reads that symbol to emit
+    // A leading `//`. The public type strips the marker (plan §4), so the
+    // Type-level output MUST widen for empty-protocol + non-empty-authority
+    // Shapes rather than pretend `"x.io/a"` is exact.
+    expectTypeOf(stringifyParsedURL(parseURL("//x.io/a"))).toEqualTypeOf<string>();
+    // A direct call without the marker also widens to `string` in this
+    // Shape — that's an accepted over-widening (still a valid supertype).
+    expectTypeOf(stringifyParsedURL({ host: "x.io", pathname: "/a" })).toEqualTypeOf<string>();
+    // Sanity: explicit protocol keeps the exact composition.
+    expectTypeOf(
+      stringifyParsedURL({ host: "x.io", pathname: "/a", protocol: "https:" }),
+    ).toEqualTypeOf<"https://x.io/a">();
+  });
 });
 
 describe("base transforms — refined", () => {
@@ -574,6 +592,25 @@ describe("joinRelativeURL — refined", () => {
     // The runtime split regex + protocol guard is not modeled at the type level.
     expectTypeOf(joinRelativeURL("http://x.io", "a")).toEqualTypeOf<string>();
     expectTypeOf(joinRelativeURL("a", "b//c")).toEqualTypeOf<string>();
+  });
+
+  it("parts containing `:` widen to string (protocol-sentinel branches unmodeled)", () => {
+    // Runtime `joinRelativeURL` has two protocol-sentinel branches: (a) `..`
+    // Is SKIPPED when `segments.length === 1 && hasProtocol(segments[0])`, so
+    // `joinRelativeURL("http:", "..")` returns `"http:"`, not `""`. (b) After
+    // A `:/` merge, `sindex === 1` triggers `${prev}/${next}` composition.
+    // The type-level fold does not model `hasProtocol`, so any `:` widens.
+    expectTypeOf(joinRelativeURL("http:", "..")).toEqualTypeOf<string>();
+    expectTypeOf(joinRelativeURL("http:", "..", "a")).toEqualTypeOf<string>();
+    expectTypeOf(joinRelativeURL("mailto:a@b", "c")).toEqualTypeOf<string>();
+  });
+
+  it("union literal parts widen when ANY branch contains `:` or `//`", () => {
+    // `HasJoinRelativeUnmodeled<"a" | "http:">` distributes to `false | true`
+    // = `boolean`. `AnyJoinRelativeUnmodeled` must use `true extends ...`
+    // Any-member semantics so a colon-containing union branch widens the
+    // Whole call, not just the branches it appears in.
+    expectTypeOf(joinRelativeURL(maybeScheme, "..")).toEqualTypeOf<string>();
   });
 });
 
@@ -1120,6 +1157,33 @@ describe("parse — no args", () => {
       port: undefined;
     }>();
   });
+  it("parseHost bare host with non-digit numeric-shape port falls back (matches runtime `/\\d+/`)", () => {
+    // Runtime `parseHost` splits the port only for `/\d+/`. TypeScript's
+    // `${number}` template admits scientific / decimal / underscore forms
+    // That the runtime rejects; the type must mirror the runtime narrowly.
+    expectTypeOf(parseHost("foo.com:1e2")).toEqualTypeOf<{
+      hostname: "foo.com:1e2";
+      port: undefined;
+    }>();
+    expectTypeOf(parseHost("foo.com:1.5")).toEqualTypeOf<{
+      hostname: "foo.com:1.5";
+      port: undefined;
+    }>();
+    // Sanity: a normal digit-only port still splits correctly.
+    expectTypeOf(parseHost("foo.com:443")).toEqualTypeOf<{
+      hostname: "foo.com";
+      port: "443";
+    }>();
+  });
+  it("parseHost bare host with empty port falls back (matches runtime `/\\d+/` requiring ≥1 digit)", () => {
+    // Runtime `parseHost("foo.com:")` returns `{ hostname: "foo.com:", port: undefined }`
+    // Because `""` fails `/\d+/`. Pin the `IsAllDigits<"">` empty guard: if
+    // It regressed to `true`, the port would incorrectly split as `""`.
+    expectTypeOf(parseHost("foo.com:")).toEqualTypeOf<{
+      hostname: "foo.com:";
+      port: undefined;
+    }>();
+  });
 });
 
 declare const broadPortNumber: number;
@@ -1164,5 +1228,16 @@ describe("withPort — port validation", () => {
   });
   it("broad string port (unknown validity) widens to `string`", () => {
     expectTypeOf(withPort("http://x.io", broadPortString)).toEqualTypeOf<string>();
+  });
+  it("invalid port on authority-less input is still `never` (port validates first)", () => {
+    // Runtime `withPort` calls `validatePort` BEFORE inspecting the input,
+    // So an invalid port throws regardless of whether the input has an
+    // Authority slot. Pin the ordering: a relative input with an invalid
+    // Port MUST be `never`, not `Input`.
+    expectTypeOf(withPort("/only/path", 0)).toEqualTypeOf<never>();
+    expectTypeOf(withPort("/only/path", "abc")).toEqualTypeOf<never>();
+    expectTypeOf(withPort("/only/path", -1)).toEqualTypeOf<never>();
+    // Sanity: a relative input with a provably-valid port is identity.
+    expectTypeOf(withPort("/only/path", 443)).toEqualTypeOf<"/only/path">();
   });
 });
